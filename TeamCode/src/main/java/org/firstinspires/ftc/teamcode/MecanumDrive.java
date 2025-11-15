@@ -66,13 +66,13 @@ public final class MecanumDrive {
 
         // http://192.168.43.1:8080/tuning/dead-wheel-angular-ramp.html
         // track width: 6356.964279483621
-        public double trackWidthTicks = 6356.964279483621;
+        public double trackWidthTicks = 4466.496465821128; //6356.964279483621;
 
         // feedforward parameters (in tick units)
         // kV: 0.00036386523112561545, kS: 0.7966911820949547
-        public double kS = 0.7966911820949547;
-        public double kV = 0.00036386523112561545;
-        public double kA = 0.000001;
+        public double kS = 0.7966911820949547; //0.9820339370013396
+        public double kV = 0.00036386523112561545; //0.0003675059774074207
+        public double kA = 0.0001;
 
         // path profile parameters (in inches)
         public double maxWheelVel = 50;
@@ -85,8 +85,8 @@ public final class MecanumDrive {
 
         // path controller gains
         public double axialGain = 0.0;
-        public double lateralGain = 0.0;
-        public double headingGain = 0.0; // shared with turn
+        public double lateralGain = 1.0;
+        public double headingGain = 3.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -249,8 +249,6 @@ public final class MecanumDrive {
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);
-
-
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
