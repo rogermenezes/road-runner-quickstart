@@ -1,0 +1,209 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.NullAction;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+@Autonomous(name = "Auto: Pick with Tile Info", group = "A")
+public class PickWithTileInfo extends LinearOpMode {
+
+    // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
+    // Example: Facing down-field from the left tile on BLUE alliance
+
+    // ---- Poses (relative to C1 origin) ----
+    public static final Pose2d START_POSE =
+            new Pose2d(0.0, 0.0, 0.0);
+
+    // Shooting at C4, facing 45° left toward Blue goal
+    public static final Pose2d SHOOT_POSE =
+            new Pose2d(72.0, 0.0, Math.toRadians(45.0));
+
+    // SPIKE_4 (row 4, E/F seam)
+    public static final Pose2d SPIKE4_APPROACH =
+            new Pose2d(72.0, 48.0, Math.toRadians(-90.0));
+    public static final Pose2d SPIKE4_POSE =
+            new Pose2d(72.0, 60.0, Math.toRadians(-90.0));
+
+    // SPIKE_3 (row 3, E/F seam)
+    public static final Pose2d SPIKE3_APPROACH =
+            new Pose2d(48.0, 48.0, Math.toRadians(-90.0));
+    public static final Pose2d SPIKE3_POSE =
+            new Pose2d(48.0, 60.0, Math.toRadians(-90.0));
+
+    // SPIKE_2 (row 2, E/F seam)
+    public static final Pose2d SPIKE2_APPROACH =
+            new Pose2d(24.0, 48.0, Math.toRadians(-90.0));
+    public static final Pose2d SPIKE2_POSE =
+            new Pose2d(24.0, 60.0, Math.toRadians(-90.0));
+
+
+
+    // helper to move "forward" in the current heading frame
+    static Vector2d forward(Vector2d p, double headingRad, double inches) {
+        double dx = inches * Math.cos(headingRad);
+        double dy = inches * Math.sin(headingRad);
+        return new Vector2d(p.x + dx, p.y + dy);
+    }
+
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
+        Intake intake = new Intake(hardwareMap);
+
+        // Initialize drive at the known start pose (you already tuned drive params)
+        Pose2d START_POSE = new Pose2d(new Vector2d(0, 0), Math.toRadians(0));
+
+        MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
+
+        // 1) START -> SHOOT_POSE
+        Action goToShootFirst = drive.actionBuilder(START_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
+                        SHOOT_POSE.heading.toDouble()
+                )
+                .build();
+
+        // SPIKE_4 cycle: SHOOT -> SPIKE4 -> SHOOT
+        Action goToSpike4 = drive.actionBuilder(SHOOT_POSE)
+                // move/rotate into approach pose
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE4_APPROACH.position.x, SPIKE4_APPROACH.position.y),
+                        SPIKE4_APPROACH.heading.toDouble()
+                )
+                // back into SPIKE row (reverse motion, rear intake leading)
+                .setReversed(true)
+                .splineToLinearHeading(
+                        SPIKE4_POSE,
+                        SPIKE4_POSE.heading.toDouble()
+                )
+                .setReversed(false)
+                .build();
+
+        Action backToShootFromSpike4 = drive.actionBuilder(SPIKE4_POSE)
+                // drive forward out of the row
+                .splineToLinearHeading(
+                        SPIKE4_APPROACH,
+                        SPIKE4_APPROACH.heading.toDouble()
+                )
+                // return to C4 shooting pose
+                .strafeToLinearHeading(
+                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
+                        SHOOT_POSE.heading.toDouble()
+                )
+                .build();
+
+        // SPIKE_3 cycle
+        Action goToSpike3 = drive.actionBuilder(SHOOT_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE3_APPROACH.position.x, SPIKE3_APPROACH.position.y),
+                        SPIKE3_APPROACH.heading.toDouble()
+                )
+                .setReversed(true)
+                .splineToLinearHeading(
+                        SPIKE3_POSE,
+                        SPIKE3_POSE.heading.toDouble()
+                )
+                .setReversed(false)
+                .build();
+
+        Action backToShootFromSpike3 = drive.actionBuilder(SPIKE3_POSE)
+                .splineToLinearHeading(
+                        SPIKE3_APPROACH,
+                        SPIKE3_APPROACH.heading.toDouble()
+                )
+                .strafeToLinearHeading(
+                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
+                        SHOOT_POSE.heading.toDouble()
+                )
+                .build();
+
+        // SPIKE_2 cycle
+        Action goToSpike2 = drive.actionBuilder(SHOOT_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
+                        SPIKE2_APPROACH.heading.toDouble()
+                )
+                .setReversed(true)
+                .splineToLinearHeading(
+                        SPIKE2_POSE,
+                        SPIKE2_POSE.heading.toDouble()
+                )
+
+                .setReversed(false)
+                .build();
+
+        Action backToShootFromSpike2 = drive.actionBuilder(SPIKE2_POSE)
+                .splineToLinearHeading(
+                        SPIKE2_APPROACH,
+                        SPIKE2_APPROACH.heading.toDouble()
+                )
+
+                .strafeToLinearHeading(
+                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
+                        SHOOT_POSE.heading.toDouble()
+                )
+                .build();
+
+        // Example shooter Action (replace with your own, or use markers)
+        Action shootAction = new SleepAction(3);
+                /*new SequentialAction(
+                intake.intakeIn(2.0),
+                intake.stop()
+        );*/
+
+        // shooter.shootThree();  // placeholder
+        // You could also expose: shooter.spinUpAndFire(), etc.
+
+        waitForStart();
+
+        if (isStopRequested()) return;
+
+        // ---------- SEQUENCE ----------
+
+        // START -> SHOOT -> shoot balls
+        Actions.runBlocking(goToShootFirst);
+        Actions.runBlocking(shootAction);
+
+        // ===== Cycle 1: SPIKE_4 =====
+        intake.intakeIn(1.0);                   // start intake before backing in
+        Actions.runBlocking(goToSpike4);
+        Actions.runBlocking(new SleepAction(0.5)); // small dwell to finish intake
+        intake.stop();
+
+        Actions.runBlocking(backToShootFromSpike4);
+        Actions.runBlocking(shootAction);
+
+        // ===== Cycle 2: SPIKE_3 =====
+        intake.intakeIn(1.0);                   // start intake before backing in
+        Actions.runBlocking(goToSpike3);
+        Actions.runBlocking(new SleepAction(0.5));
+        intake.stop();
+
+        Actions.runBlocking(backToShootFromSpike3);
+        Actions.runBlocking(shootAction);
+
+        // ===== Cycle 3: SPIKE_2 =====
+        intake.intakeIn(1.0);                   // start intake before backing in
+        Actions.runBlocking(goToSpike2);
+        Actions.runBlocking(new SleepAction(0.5));
+        intake.stop();
+
+        Actions.runBlocking(backToShootFromSpike2);
+        Actions.runBlocking(shootAction);
+
+        /// ////////////////////
+        telemetry.addLine("");
+        telemetry.addLine("Auto done ✅");
+        telemetry.update();
+    }
+}
