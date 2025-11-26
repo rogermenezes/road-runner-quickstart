@@ -61,17 +61,17 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
-        public double inPerTick = 0.001993223;
-        public double lateralInPerTick = inPerTick;
+        public double inPerTick = 0.00199236261;
+        public double lateralInPerTick = 0.0014008398409487986;
 
         // http://192.168.43.1:8080/tuning/dead-wheel-angular-ramp.html
         // track width: 6356.964279483621
-        public double trackWidthTicks = 4466.496465821128; //6356.964279483621;
+        public double trackWidthTicks = 6506.497802875128; //6356.964279483621;
 
         // feedforward parameters (in tick units)
         // kV: 0.00036386523112561545, kS: 0.7966911820949547
-        public double kS = 0.7966911820949547; //0.9820339370013396
-        public double kV = 0.00036386523112561545; //0.0003675059774074207
+        public double kS = 0.7754130670845116; //0.9820339370013396
+        public double kV = 0.0003877944612327854; //0.0003675059774074207
         public double kA = 0.0001;
 
         // path profile parameters (in inches)
@@ -86,7 +86,7 @@ public final class MecanumDrive {
         // path controller gains
         public double axialGain = 0.0;
         public double lateralGain = 1.0;
-        public double headingGain = 3.0; // shared with turn
+        public double headingGain = 2.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -228,16 +228,17 @@ public final class MecanumDrive {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "left_front_drive");
-        leftBack = hardwareMap.get(DcMotorEx.class, "left_back_drive");
-        rightBack = hardwareMap.get(DcMotorEx.class, "encoder_spot");//right_back_drive
-        rightFront = hardwareMap.get(DcMotorEx.class, "right_front_drive");
+        leftFront = hardwareMap.get(DcMotorEx.class, "FL"); //port 0
+        leftBack = hardwareMap.get(DcMotorEx.class, "BL"); // port 1
+        rightBack = hardwareMap.get(DcMotorEx.class, "BR"); // port 3
+        rightFront = hardwareMap.get(DcMotorEx.class, "FR"); // port 2
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -246,9 +247,11 @@ public final class MecanumDrive {
         lazyImu = new LazyHardwareMapImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
                 PARAMS.logoFacingDirection, PARAMS.usbFacingDirection));
 
+
+
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);
+        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick, pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
