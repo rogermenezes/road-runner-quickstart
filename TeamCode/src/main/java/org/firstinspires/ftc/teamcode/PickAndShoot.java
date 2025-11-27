@@ -40,7 +40,7 @@ public class PickAndShoot extends LinearOpMode {
         double   h = START_POSE.heading.toDouble(); // radians
 
         // 1) Forward 42
-        Vector2d p1 = forward(p, h, 30);
+        Vector2d p1 = forward(p, h, 60);
 
         // 2) Left turn 90°
         double h2 = h + Math.toRadians(90);
@@ -59,15 +59,16 @@ public class PickAndShoot extends LinearOpMode {
 
         Action path = drive.actionBuilder(START_POSE)
                 .strafeTo(p1)                 // forward 42 in current heading frame
-                .turn(Math.toRadians(90))     // left 90
-                .strafeTo(p2)                 // forward 42
-                .afterTime(0.0, intake.intakeIn(0.8))
-                .waitSeconds(2.0)
-                .afterTime(0.0, intake.stop())
-                .strafeTo(p3)                 // back 42
-                .turn(Math.toRadians(-90))     // left 90
-                .strafeTo(p4)                 // forward 20
-                .turn(Math.toRadians(45))     // left 90
+//                .turn(Math.toRadians(90))     // left 90
+//                .strafeTo(p2)                 // forward 42
+//                .afterTime(0.0, intake.intakeIn(0.8))
+//                .waitSeconds(2.0)
+//                .afterTime(0.0, intake.stop())
+//                .strafeTo(p3)                 // back 42
+//                .turn(Math.toRadians(-90))     // left 90
+//                .strafeTo(p4)                 // forward 20
+//
+//                .turn(Math.toRadians(45))     // left 90
                 .build();
 
 
