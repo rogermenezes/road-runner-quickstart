@@ -29,11 +29,11 @@ public class Shooter {
         encoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    private double getDegrees() {
+    public double getDegrees() {
         return (encoder.getCurrentPosition() / TICKS_PER_REV) * 360.0;
     }
 
-    private void advanceDrumTo(LinearOpMode opMode,
+    public void advanceDrumTo(LinearOpMode opMode,
                                double targetDegrees,
                                Telemetry telemetry,
                                boolean logDegrees) {
@@ -47,7 +47,6 @@ public class Shooter {
             }
             drum.setPower(-1.0);
         }
-
         drum.setPower(0.0);
     }
 
@@ -71,7 +70,7 @@ public class Shooter {
         }
 
         // small holding power like your TeleOp
-        kicker.setPower(-0.01);
+        //kicker.setPower(-0.01);
     }
 
     /** Fixed spin-up for auto (no gamepad). */
@@ -88,6 +87,8 @@ public class Shooter {
     /** Shoot 3 balls in autonomous, then return drum to intake position. */
     public void shootThreeBalls(LinearOpMode opMode, Telemetry telemetry) {
         // ---- First ball ----
+
+        kicker.setPower(-0.01);
         double targetDegrees = getDegrees() + 8750;
         advanceDrumTo(opMode, targetDegrees, telemetry, true);
         kickerCycle(opMode);

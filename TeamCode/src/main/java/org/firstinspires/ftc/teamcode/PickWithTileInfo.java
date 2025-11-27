@@ -171,6 +171,7 @@ public class PickWithTileInfo extends LinearOpMode {
         // ---------- SEQUENCE ----------
 
         // START -> SHOOT -> shoot balls
+        Actions.runBlocking(intake.intakeIn(1.0));
         Actions.runBlocking(goToShootFirst);
         shooter.spinUpForAuto();
         sleep(1000); // give flywheels time to get up to speed (tune this)
