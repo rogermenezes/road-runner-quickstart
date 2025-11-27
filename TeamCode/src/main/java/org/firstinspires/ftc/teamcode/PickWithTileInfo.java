@@ -43,6 +43,7 @@ public class PickWithTileInfo extends LinearOpMode {
             new Pose2d(24.0, 60.0, Math.toRadians(-90.0));
 
 
+    private Shooter shooter;   // 🔹 NEW
 
     // helper to move "forward" in the current heading frame
     static Vector2d forward(Vector2d p, double headingRad, double inches) {
@@ -62,6 +63,7 @@ public class PickWithTileInfo extends LinearOpMode {
         Pose2d START_POSE = new Pose2d(new Vector2d(0, 0), Math.toRadians(0));
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
+        shooter = new Shooter(hardwareMap);
 
         // 1) START -> SHOOT_POSE
         Action goToShootFirst = drive.actionBuilder(START_POSE)
@@ -169,8 +171,13 @@ public class PickWithTileInfo extends LinearOpMode {
         // ---------- SEQUENCE ----------
 
         // START -> SHOOT -> shoot balls
+        Actions.runBlocking(intake.intakeIn(1.0));
         Actions.runBlocking(goToShootFirst);
-        Actions.runBlocking(shootAction);
+        shooter.spinUpForAuto();
+        sleep(1000); // give flywheels time to get up to speed (tune this)
+
+        shooter.shootThreeBalls(this, telemetry);
+
 
         // ===== Cycle 1: SPIKE_4 =====
         /*intake.intakeIn(1.0);                   // start intake before backing in
