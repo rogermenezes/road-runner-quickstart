@@ -114,8 +114,8 @@ public class Shooter {
 
     /** Fixed spin-up for auto (no gamepad). */
     public void spinUpForAuto() {
-        turret1.setPower(-0.8);
-        turret2.setPower(0.8);
+        turret1.setPower(-0.9);
+        turret2.setPower(0.9);
     }
 
     public void stopShooter() {
@@ -162,7 +162,7 @@ public class Shooter {
 
     public void intakeThreeBalls(LinearOpMode opMode, Telemetry telemetry, boolean firstIntakeEver) {
 
-        //verify with Harsh the below statement
+        //verify with Harsha the below statement
         double targetDegrees = getDegrees() + 35000;
         if (firstIntakeEver) {
             targetDegrees = 25000;
