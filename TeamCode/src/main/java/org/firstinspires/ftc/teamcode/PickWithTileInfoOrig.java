@@ -4,16 +4,16 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 
-@Autonomous(name = "Auto: Pick with Tile Info", group = "A")
-public class PickWithTileInfo extends LinearOpMode {
+@Autonomous(name = "Auto: Pick with Tile Info Orig", group = "A")
+public class PickWithTileInfoOrig extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
     // Example: Facing down-field from the left tile on BLUE alliance
@@ -28,7 +28,7 @@ public class PickWithTileInfo extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(24.0, 0.0, Math.toRadians(0.0));
+            new Pose2d(72.0, 0.0, Math.toRadians(-135.0));
 
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
@@ -71,7 +71,7 @@ public class PickWithTileInfo extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
         shooter = new Shooter(hardwareMap);
 
-        TranslationalVelConstraint slowVel = new TranslationalVelConstraint(12.0);   // in/s
+        TranslationalVelConstraint slowVel = new TranslationalVelConstraint(15.0);   // in/s
         ProfileAccelConstraint slowAccel   = new ProfileAccelConstraint(-10.0, 10.0); // in/s^2
 
 
@@ -79,9 +79,7 @@ public class PickWithTileInfo extends LinearOpMode {
         Action goToShootFirst = drive.actionBuilder(START_POSE)
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble(),
-                        slowVel,
-                        slowAccel
+                        SHOOT_POSE.heading.toDouble()
                 )
                 .build();
 
@@ -138,27 +136,27 @@ public class PickWithTileInfo extends LinearOpMode {
                 .build();
 
         // SPIKE_2 cycle
-//        Action goToSpike2 = drive.actionBuilder(SHOOT_POSE)
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
-//                        SPIKE2_APPROACH.heading.toDouble()
-//                )
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE2_POSE.position.x, SPIKE2_POSE.position.y),
-//                        SPIKE2_POSE.heading.toDouble()
-//                )
-//                .build();
+        Action goToSpike2 = drive.actionBuilder(SHOOT_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
+                        SPIKE2_APPROACH.heading.toDouble()
+                )
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE2_POSE.position.x, SPIKE2_POSE.position.y),
+                        SPIKE2_POSE.heading.toDouble()
+                )
+                .build();
 
-//        Action backToShootFromSpike2 = drive.actionBuilder(SPIKE2_POSE)
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
-//                        SPIKE2_APPROACH.heading.toDouble()
-//                )
-//                .strafeToLinearHeading(
-//                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-//                        SHOOT_POSE.heading.toDouble()
-//                )
-//                .build();
+        Action backToShootFromSpike2 = drive.actionBuilder(SPIKE2_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
+                        SPIKE2_APPROACH.heading.toDouble()
+                )
+                .strafeToLinearHeading(
+                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
+                        SHOOT_POSE.heading.toDouble()
+                )
+                .build();
 
 
         // Example shooter Action (replace with your own, or use markers)
@@ -179,17 +177,16 @@ public class PickWithTileInfo extends LinearOpMode {
 
         // START -> SHOOT -> shoot balls
         Actions.runBlocking(intake.intakeIn(1.0));
-        //shooter.warmUpDrum(this, telemetry, true);
         Actions.runBlocking(goToShootFirst);
-        //shooter.spinUpForAuto();
-        //sleep(1000); // give flywheels time to get up to speed (tune this)
+        shooter.spinUpForAuto();
+        sleep(1000); // give flywheels time to get up to speed (tune this)
 
-        //shooter.shootThreeBalls(this, telemetry);
+        shooter.shootThreeBalls(this, telemetry);
 
 
         // ===== Cycle 1: SPIKE_4 =====
         //intake.intakeIn(1.0);                   // start intake before backing in
-        //Actions.runBlocking(goToSpike4);
+        Actions.runBlocking(goToSpike4);
         shooter.intakeThreeBalls(this, telemetry, true);
         //shooter.shootThreeBalls(this, telemetry);
 
