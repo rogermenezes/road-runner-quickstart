@@ -4,16 +4,15 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.ProfileAccelConstraint;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 
-@Autonomous(name = "Auto: Pick with Tile Info", group = "A")
-public class PickWithTileInfo extends LinearOpMode {
+@Autonomous(name = "Auto: Scrimmage 11/30 (Blue C1)", group = "A")
+public class ScrimmageAutonomous extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
     // Example: Facing down-field from the left tile on BLUE alliance
@@ -28,10 +27,11 @@ public class PickWithTileInfo extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(24.0, 0.0, Math.toRadians(0.0));
+            new Pose2d(72.0, 0.0, Math.toRadians(-135.0));
 
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
+    // Using Y as 12.0 otherwise there is a runtime error about maxVel being zero
     public static final Pose2d SPIKE4_APPROACH =
             new Pose2d(72.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE4_POSE =
@@ -51,14 +51,6 @@ public class PickWithTileInfo extends LinearOpMode {
 
     private Shooter shooter;   // 🔹 NEW
 
-    // helper to move "forward" in the current heading frame
-    static Vector2d forward(Vector2d p, double headingRad, double inches) {
-        double dx = inches * Math.cos(headingRad);
-        double dy = inches * Math.sin(headingRad);
-        return new Vector2d(p.x + dx, p.y + dy);
-    }
-
-
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -71,17 +63,15 @@ public class PickWithTileInfo extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
         shooter = new Shooter(hardwareMap);
 
-        TranslationalVelConstraint slowVel = new TranslationalVelConstraint(12.0);   // in/s
+        // trying to move slower while getting to STRIKE_POSE
+        TranslationalVelConstraint slowVel = new TranslationalVelConstraint(15.0);   // in/s
         ProfileAccelConstraint slowAccel   = new ProfileAccelConstraint(-10.0, 10.0); // in/s^2
-
 
         // 1) START -> SHOOT_POSE
         Action goToShootFirst = drive.actionBuilder(START_POSE)
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble(),
-                        slowVel,
-                        slowAccel
+                        SHOOT_POSE.heading.toDouble()
                 )
                 .build();
 
@@ -138,66 +128,48 @@ public class PickWithTileInfo extends LinearOpMode {
                 .build();
 
         // SPIKE_2 cycle
-//        Action goToSpike2 = drive.actionBuilder(SHOOT_POSE)
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
-//                        SPIKE2_APPROACH.heading.toDouble()
-//                )
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE2_POSE.position.x, SPIKE2_POSE.position.y),
-//                        SPIKE2_POSE.heading.toDouble()
-//                )
-//                .build();
+        Action goToSpike2 = drive.actionBuilder(SHOOT_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
+                        SPIKE2_APPROACH.heading.toDouble()
+                )
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE2_POSE.position.x, SPIKE2_POSE.position.y),
+                        SPIKE2_POSE.heading.toDouble()
+                )
+                .build();
 
-//        Action backToShootFromSpike2 = drive.actionBuilder(SPIKE2_POSE)
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
-//                        SPIKE2_APPROACH.heading.toDouble()
-//                )
-//                .strafeToLinearHeading(
-//                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-//                        SHOOT_POSE.heading.toDouble()
-//                )
-//                .build();
+        Action backToShootFromSpike2 = drive.actionBuilder(SPIKE2_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
+                        SPIKE2_APPROACH.heading.toDouble()
+                )
+                .strafeToLinearHeading(
+                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
+                        SHOOT_POSE.heading.toDouble()
+                )
+                .build();
 
-
-        // Example shooter Action (replace with your own, or use markers)
-        Action shootAction = new SleepAction(3);
-                /*new SequentialAction(
-                intake.intakeIn(2.0),
-                intake.stop()
-        );*/
-
-        // shooter.shootThree();  // placeholder
-        // You could also expose: shooter.spinUpAndFire(), etc.
 
         waitForStart();
-
         if (isStopRequested()) return;
 
         // ---------- SEQUENCE ----------
 
         // START -> SHOOT -> shoot balls
         Actions.runBlocking(intake.intakeIn(1.0));
-        //shooter.warmUpDrum(this, telemetry, true);
         Actions.runBlocking(goToShootFirst);
-        //shooter.spinUpForAuto();
-        //sleep(1000); // give flywheels time to get up to speed (tune this)
+        shooter.spinUpForAuto();
+        sleep(1000); // give flywheels time to get up to speed (tune this)
 
-        //shooter.shootThreeBalls(this, telemetry);
+        shooter.shootThreeBalls(this, telemetry);
 
 
         // ===== Cycle 1: SPIKE_4 =====
-        //intake.intakeIn(1.0);                   // start intake before backing in
-        //Actions.runBlocking(goToSpike4);
+        Actions.runBlocking(goToSpike4);
         shooter.intakeThreeBalls(this, telemetry, true);
-        //shooter.shootThreeBalls(this, telemetry);
-
-        //Actions.runBlocking(new SleepAction(0.5)); // small dwell to finish intake
-        //intake.stop();
-
-        //Actions.runBlocking(backToShootFromSpike4);
-        //shooter.shootThreeBalls(this, telemetry);
+        Actions.runBlocking(backToShootFromSpike4);
+        shooter.shootThreeBalls(this, telemetry);
 
         // ===== Cycle 2: SPIKE_3 =====
         /*+intake.intakeIn(1.0);                   // start intake before backing in
