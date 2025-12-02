@@ -34,8 +34,8 @@ public class PidTutorial extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        turret1 = hardwareMap.get(DcMotorEx.class, "turret1");
-        turret2 = hardwareMap.get(DcMotorEx.class, "turret2");
+        turret1 = hardwareMap.get(DcMotorEx.class, "left_front_drive");
+        turret2 = hardwareMap.get(DcMotorEx.class, "right_front_drive");
 
         // Combine DS telemetry + Dashboard telemetry
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());

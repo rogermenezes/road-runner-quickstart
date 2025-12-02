@@ -26,7 +26,7 @@ public class ScrimmageRedF6Autonomous extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(72.0, 0.0, Math.toRadians(0.0));
+            new Pose2d(66.0, 0.0, Math.toRadians(0.0));
 
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
