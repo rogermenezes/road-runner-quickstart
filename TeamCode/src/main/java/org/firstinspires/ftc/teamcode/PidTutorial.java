@@ -3,8 +3,10 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -30,30 +32,51 @@ public class PidTutorial extends LinearOpMode {
     private double integralSum = 0;
     private double lastError = 0;
 
+    public static double LOOP_PERIOD = 0.05;
+
     ElapsedTime timer = new ElapsedTime();
+    private FtcDashboard dashboard;
+
+
 
     @Override
     public void runOpMode() throws InterruptedException {
         turret1 = hardwareMap.get(DcMotorEx.class, "left_front_drive");
         turret2 = hardwareMap.get(DcMotorEx.class, "right_front_drive");
 
+        turret1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        dashboard = FtcDashboard.getInstance();
+
         // Combine DS telemetry + Dashboard telemetry
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         waitForStart();
         timer.reset();
 
         while (opModeIsActive()) {
-            double currentVelocity = turret1.getVelocity();
+            double dt = timer.seconds();
+            if (dt >= LOOP_PERIOD) {
+                double currentVelocity = turret1.getVelocity();
 
-            double power = PIDControl(TARGET_VELOCITY, currentVelocity);
-            turret1.setPower(power);
+                double power = PIDControl(TARGET_VELOCITY, currentVelocity);
+                turret1.setPower(power);
 
-            telemetry.addData("Target Velocity", TARGET_VELOCITY);
-            telemetry.addData("Velocity", currentVelocity);
-            telemetry.addData("Power", power);
-            telemetry.addData("Error", TARGET_VELOCITY - currentVelocity);
-            telemetry.update();
+                telemetry.addData("Target Velocity", TARGET_VELOCITY);
+                telemetry.addData("Velocity", currentVelocity);
+                telemetry.addData("Power", power);
+                telemetry.addData("Error", TARGET_VELOCITY - currentVelocity);
+                telemetry.update();
+
+                TelemetryPacket packet = new TelemetryPacket();
+                packet.put("velocity", currentVelocity);
+                packet.put("target", TARGET_VELOCITY);
+                packet.put("power", power);
+                dashboard.sendTelemetryPacket(packet);
+
+                timer.reset();
+            }
+
         }
     }
 
