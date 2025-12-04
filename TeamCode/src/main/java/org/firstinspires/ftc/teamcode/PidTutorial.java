@@ -19,15 +19,15 @@ public class PidTutorial extends LinearOpMode {
 
     // PIDF constants visible & tunable in FTC Dashboard
     public static double Kp = 0.0005;
-    public static double Ki = 0.00001;
-    public static double Kd = 0.0001;
-    public static double Kf = 0.0003;
+    public static double Ki = 0.0;
+    public static double Kd = 0.0;
+    public static double Kf = 0.00034;
 
     // Target ticks/sec for your shooter motor
     public static double TARGET_VELOCITY = 1000;
 
     // Anti-windup clamp
-    public static double INTEGRAL_MAX = 1.0;
+    public static double INTEGRAL_MAX = 0.5;
 
     private double integralSum = 0;
     private double lastError = 0;
@@ -62,9 +62,6 @@ public class PidTutorial extends LinearOpMode {
                 double power = PIDControl(TARGET_VELOCITY, currentVelocity);
                 turret1.setPower(power);
 
-                telemetry.addData("Target Velocity", TARGET_VELOCITY);
-                telemetry.addData("Velocity", currentVelocity);
-                telemetry.addData("Power", power);
                 telemetry.addData("Error", TARGET_VELOCITY - currentVelocity);
                 telemetry.update();
 
