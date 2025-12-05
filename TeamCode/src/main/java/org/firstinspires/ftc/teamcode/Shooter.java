@@ -6,27 +6,39 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class Shooter {
 
-    private CRServo drum;
+    private Servo drum;
     private CRServo kicker;
     private DcMotor turret1;
     private DcMotor turret2;
     private DcMotor encoder;
+
+    private DcMotor intake;
+
 
     NormalizedColorSensor front;
     NormalizedColorSensor left;
     NormalizedColorSensor right;
     NormalizedColorSensor bottom;
 
-    private final ElapsedTime timer = new ElapsedTime();
+    private final ElapsedTime runTime = new ElapsedTime();
     private static final double TICKS_PER_REV = 28.0;
 
+    int count = -1;
+
+    double position = 0.0;
+
+
+
     public Shooter(HardwareMap hardwareMap) {
-        drum    = hardwareMap.get(CRServo.class, "drum");
+        drum    = hardwareMap.get(Servo.class, "drum");
+        drum.setPosition(0);
+
         kicker  = hardwareMap.get(CRServo.class, "kicker");
         turret1 = hardwareMap.get(DcMotor.class, "turret1");
         turret2 = hardwareMap.get(DcMotor.class, "turret2");
@@ -40,6 +52,8 @@ public class Shooter {
         right.setGain(20);
         bottom = hardwareMap.get(NormalizedColorSensor.class, "bottom");
         bottom.setGain(20);
+
+        intake = hardwareMap.dcMotor.get("intake");
 
         encoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         encoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -61,12 +75,47 @@ public class Shooter {
                 telemetry.addData("ShooterDegrees", "%.1f", degrees);
                 telemetry.update();
             }
-            drum.setPower(-1.0);
+            //drum.setPower(-1.0);
         }
-        drum.setPower(0.0);
+        //drum.setPower(0.0);
     }
 
+    public void intake(
+            LinearOpMode opMode,
+            Telemetry telemetry
+            ) {
 
+        intake.setPower(1);
+        telemetry.addData("Drum position", drum.getPosition());
+        telemetry.addData("count", count);
+
+        NormalizedRGBA colors = front.getNormalizedColors();
+        float r = colors.red / colors.alpha;
+        float g = colors.green / colors.alpha;
+        float b = colors.blue / colors.alpha;
+        String detectedColor = detectGreenOrPurple(r, g, b, telemetry);
+
+        //Rotate the drum while the count is < 3 and there is a ball sucked in and we are not shooting
+        while (
+                opMode.opModeIsActive() &&
+                (count < 3) &&
+                        (detectedColor.equalsIgnoreCase("P") || detectedColor.equalsIgnoreCase("G"))) {
+            count = count + 1;
+            telemetry.addData("count", count);
+            telemetry.update();
+            if (count == 1 || count == 2) { //I wonder why the count becomes 2 sometimes.
+                position = position + 0.2;
+                drum.setPosition(position);
+            } else if (count == 3) {
+                position = position + 0.42;
+                drum.setPosition(position);
+            }
+            telemetry.addData("Drum position", drum.getPosition());
+
+            runTime.reset();
+            while(runTime.milliseconds() < 125) {}
+        }
+    }
 
     public void advanceDrumForIntake(LinearOpMode opMode,
                               double targetDegrees,
@@ -83,28 +132,28 @@ public class Shooter {
                 telemetry.addData("ShooterDegrees", "%.1f", degrees);
                 telemetry.update();
             }
-            drum.setPower(-3.0);
+            //drum.setPower(-3.0);
             degrees = getDegrees();
         }
-        drum.setPower(0.0);
+        //drum.setPower(0.0);
     }
 
     private void kickerCycle(LinearOpMode opMode) {
         // wait 700 ms
-        timer.reset();
-        while (opMode.opModeIsActive() && timer.milliseconds() < 700) {
+        runTime.reset();
+        while (opMode.opModeIsActive() && runTime.milliseconds() < 700) {
             // just wait
         }
 
         // forward 500 ms
-        timer.reset();
-        while (opMode.opModeIsActive() && timer.milliseconds() < 500) {
+        runTime.reset();
+        while (opMode.opModeIsActive() && runTime.milliseconds() < 500) {
             kicker.setPower(1.0);
         }
 
         // back 125 ms
-        timer.reset();
-        while (opMode.opModeIsActive() && timer.milliseconds() < 125) {
+        runTime.reset();
+        while (opMode.opModeIsActive() && runTime.milliseconds() < 125) {
             kicker.setPower(-0.5);
         }
 
@@ -171,7 +220,7 @@ public class Shooter {
         advanceDrumForIntake(opMode, targetDegrees, telemetry, true, "");
         targetDegrees = getDegrees() + 35000;
         int ballsIntake = 0;
-        while(ballsIntake < 3) {
+        while(opMode.opModeIsActive() && ballsIntake < 3) {
             NormalizedRGBA colors = front.getNormalizedColors();
             float r = colors.red / colors.alpha;
             float g = colors.green / colors.alpha;
