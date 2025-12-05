@@ -11,7 +11,7 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-@Autonomous(name = "Auto: Scrimmage 11/30 (Blue C1)", group = "A")
+@Autonomous(name = "Auto: Scrimmage 11/30 (Blue C1 Start)", group = "A")
 public class ScrimmageAutonomous extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
@@ -35,7 +35,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public static final Pose2d SPIKE4_APPROACH =
             new Pose2d(72.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE4_POSE =
-            new Pose2d(72.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
+            new Pose2d(72.0, 36.0, Math.toRadians(90.0));
 
     // SPIKE_3 (row 3, E/F seam)
     public static final Pose2d SPIKE3_APPROACH =
@@ -156,20 +156,27 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         // ---------- SEQUENCE ----------
 
+        // shooter.intake(this, telemetry);
         // START -> SHOOT -> shoot balls
-        Actions.runBlocking(intake.intakeIn(1.0));
+        //Actions.runBlocking(intake.intakeIn(1.0));
         Actions.runBlocking(goToShootFirst);
-        shooter.spinUpForAuto();
+        shooter.aboutToShoot();
+        shooter.shootThreeBalls(0.2, 0.6, 0.99);
+
+
+        //shooter.spinUpForAuto();
         sleep(1000); // give flywheels time to get up to speed (tune this)
 
-        shooter.shootThreeBalls(this, telemetry);
+        //shooter.shootThreeBalls(this, telemetry);
 
 
         // ===== Cycle 1: SPIKE_4 =====
         Actions.runBlocking(goToSpike4);
-        shooter.intakeThreeBalls(this, telemetry, true);
-        Actions.runBlocking(backToShootFromSpike4);
-        shooter.shootThreeBalls(this, telemetry);
+        shooter.intake(this, telemetry);
+
+        //shooter.intakeThreeBalls(this, telemetry, true);
+        //Actions.runBlocking(backToShootFromSpike4);
+        //shooter.shootThreeBalls(this, telemetry);
 
         // ===== Cycle 2: SPIKE_3 =====
         /*+intake.intakeIn(1.0);                   // start intake before backing in

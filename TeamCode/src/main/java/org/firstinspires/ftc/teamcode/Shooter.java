@@ -13,13 +13,13 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class Shooter {
 
     private Servo drum;
-    private CRServo kicker;
     private DcMotor turret1;
     private DcMotor turret2;
     private DcMotor encoder;
 
     private DcMotor intake;
 
+    private Servo kicker;
 
     NormalizedColorSensor front;
     NormalizedColorSensor left;
@@ -39,10 +39,11 @@ public class Shooter {
         drum    = hardwareMap.get(Servo.class, "drum");
         drum.setPosition(0);
 
-        kicker  = hardwareMap.get(CRServo.class, "kicker");
         turret1 = hardwareMap.get(DcMotor.class, "turret1");
         turret2 = hardwareMap.get(DcMotor.class, "turret2");
         encoder = hardwareMap.get(DcMotor.class, "encoder");
+
+        kicker = hardwareMap.get(Servo.class, "kicker");
 
         front = hardwareMap.get(NormalizedColorSensor.class, "front");
         front.setGain(20);
@@ -89,17 +90,23 @@ public class Shooter {
         telemetry.addData("Drum position", drum.getPosition());
         telemetry.addData("count", count);
 
-        NormalizedRGBA colors = front.getNormalizedColors();
-        float r = colors.red / colors.alpha;
-        float g = colors.green / colors.alpha;
-        float b = colors.blue / colors.alpha;
-        String detectedColor = detectGreenOrPurple(r, g, b, telemetry);
-
         //Rotate the drum while the count is < 3 and there is a ball sucked in and we are not shooting
         while (
                 opMode.opModeIsActive() &&
-                (count < 3) &&
-                        (detectedColor.equalsIgnoreCase("P") || detectedColor.equalsIgnoreCase("G"))) {
+                (count < 3)) {
+
+            NormalizedRGBA colors = front.getNormalizedColors();
+            float r = colors.red / colors.alpha;
+            float g = colors.green / colors.alpha;
+            float b = colors.blue / colors.alpha;
+
+            String detectedColor = detectGreenOrPurple(r, g, b, telemetry);
+            if (!detectedColor.equalsIgnoreCase("P") &&
+                    !detectedColor.equalsIgnoreCase("G")) {
+                continue;
+            }
+
+
             count = count + 1;
             telemetry.addData("count", count);
             telemetry.update();
@@ -116,6 +123,99 @@ public class Shooter {
             while(runTime.milliseconds() < 125) {}
         }
     }
+
+    private void setShooterSpeed(double high, double mid, double low) {
+            turret1.setPower(high);
+            turret2.setPower(-high);
+
+//        if (gamepad1.dpad_up){
+//            turret1.setPower(high);
+//            turret2.setPower(-high);
+//        }
+//        if (gamepad1.dpad_right){
+//            turret1.setPower(mid);
+//            turret2.setPower(-mid);
+//        }
+//        if (gamepad1.dpad_left){
+//            turret1.setPower(mid);
+//            turret2.setPower(-mid);
+//        }
+//        if (gamepad1.dpad_down){
+//            turret1.setPower(low);
+//            turret2.setPower(-low);
+//        }
+    }
+
+
+    public void aboutToShoot() {
+        setShooterSpeed(1, 0.9, 0.8);
+        //Realign the kicker
+        kicker.setPosition(0.01);
+
+    }
+
+    public void shootThreeBalls(double firstPos, double secondPos, double thirdPos) {
+
+        //Shoot first ball
+        position = firstPos;
+        drum.setPosition(position);
+        runTime.reset();
+        while(runTime.milliseconds() < 1000) {}
+
+        kicker.setPosition(0.5);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 125) {}
+        kicker.setPosition(0.01);
+
+
+        //Shoot second ball
+        setShooterSpeed(1, 0.9, 0.8);
+
+        position = secondPos;
+        drum.setPosition(position);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 1000) {}
+
+        kicker.setPosition(0.5);
+        runTime.reset();
+        while(runTime.milliseconds() < 125) {}
+        kicker.setPosition(0.01);
+
+
+        //Shoot third ball
+        setShooterSpeed(1, 0.9, 0.8);
+        position = thirdPos;
+        drum.setPosition(position);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 1000) {}
+
+        kicker.setPosition(0.5);
+        runTime.reset();
+        while(runTime.milliseconds() < 125) {}
+        kicker.setPosition(0.01);
+
+        count = 0;
+        count--; //I cant explain why it has to be -1
+
+        //Move back to 0
+        position = 0;
+        drum.setPosition(position);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 125) {}
+
+        //Reset shooter power
+        turret1.setPower(0);
+        turret2.setPower(0);
+
+    }
+
+
+
+
 
     public void advanceDrumForIntake(LinearOpMode opMode,
                               double targetDegrees,
@@ -148,13 +248,13 @@ public class Shooter {
         // forward 500 ms
         runTime.reset();
         while (opMode.opModeIsActive() && runTime.milliseconds() < 500) {
-            kicker.setPower(1.0);
+            //kicker.setPower(1.0);
         }
 
         // back 125 ms
         runTime.reset();
         while (opMode.opModeIsActive() && runTime.milliseconds() < 125) {
-            kicker.setPower(-0.5);
+            //kicker.setPower(-0.5);
         }
 
         // small holding power like your TeleOp
@@ -176,7 +276,7 @@ public class Shooter {
     public void shootThreeBalls(LinearOpMode opMode, Telemetry telemetry) {
         // ---- First ball ----
 
-        kicker.setPower(-0.01);
+        //kicker.setPower(-0.01);
         double targetDegrees = getDegrees() + 8750;
         advanceDrumTo(opMode, targetDegrees, telemetry, true);
         kickerCycle(opMode);
