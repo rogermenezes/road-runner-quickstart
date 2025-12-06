@@ -11,6 +11,30 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+/**
+ * The high level logic is this:
+ * 1. Robot starts at START_POSE
+ * 2. Robot goes to SHOOT_POSE
+ * 3. Robot shoots three balls
+ * 4. Robot goes to SPIKE_4, intake balls
+ * 5. Robot goes back to SHOOT_POSE and shoots three balls
+ * 6. Robot goes to SPIKE_3, intake balls
+ * 7. Robot goes back to SHOOT_POSE and shoots three balls
+ * 8. Robot goes to SPIKE_2
+ * 9. Robot goes back to SHOOT_POSE and shoots three balls
+ *
+ *  START_POSE -> SHOOT_POSE -> Shoot balls -> SPIKE4_APPROACH -> SPIKE4_POSE -> Intake ->
+ *      SHOOT_POSE -> Shoot balls -> SPIKE3_APPROACH -> SPIKE3_POSE -> Intake ->
+ *      SHOOT_POSE -> Shoot balls -> SPIKE2_APPROACH -> SPIKE_2_POSE -> Intake ->
+ *      SHOOT_POSE -> Shoot balls
+ *
+ * Going to a strike pose, e.g. SPIKE_4, requires it to go in a right angle path,
+ * so that it can pick up the balls in SPIKE position in a straight line.
+ * The way to do this is:
+ * SHOOT_POSE -> SPIKE_4_APPROACH -> SPIKE_4_POSE
+ *
+ *
+ */
 @Autonomous(name = "Auto: Scrimmage 11/30 (Blue C1 Start)", group = "A")
 public class ScrimmageAutonomous extends LinearOpMode {
 
@@ -49,19 +73,17 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public static final Pose2d SPIKE2_POSE =
             new Pose2d(24.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
 
-    private Shooter shooter;   // 🔹 NEW
+    private NewShooter shooter;   // 🔹 NEW
 
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
-        Intake intake = new Intake(hardwareMap);
+        MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
+        shooter = new NewShooter(hardwareMap);
 
         // Initialize drive at the known start pose (you already tuned drive params)
+        // TODO: Duplicate variable, remove this aftrer testing
         Pose2d START_POSE = new Pose2d(new Vector2d(0, 0), Math.toRadians(0));
-
-        MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
-        shooter = new Shooter(hardwareMap);
 
         // trying to move slower while getting to STRIKE_POSE
         TranslationalVelConstraint slowVel = new TranslationalVelConstraint(15.0);   // in/s
@@ -156,46 +178,30 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         // ---------- SEQUENCE ----------
 
-        // shooter.intake(this, telemetry);
         // START -> SHOOT -> shoot balls
-        //Actions.runBlocking(intake.intakeIn(1.0));
         Actions.runBlocking(goToShootFirst);
-        shooter.aboutToShoot();
         shooter.shootThreeBalls(0.2, 0.6, 0.99);
-
-
-        //shooter.spinUpForAuto();
         sleep(1000); // give flywheels time to get up to speed (tune this)
 
-        //shooter.shootThreeBalls(this, telemetry);
-
-
-        // ===== Cycle 1: SPIKE_4 =====
+        // Go to SPIKE_4 =====
         Actions.runBlocking(goToSpike4);
         shooter.intake(this, telemetry);
 
-        //shooter.intakeThreeBalls(this, telemetry, true);
         //Actions.runBlocking(backToShootFromSpike4);
-        //shooter.shootThreeBalls(this, telemetry);
+        //shooter.shootThreeBalls(0.2, 0.6, 0.99);
 
         // ===== Cycle 2: SPIKE_3 =====
-        /*+intake.intakeIn(1.0);                   // start intake before backing in
-        Actions.runBlocking(goToSpike3);
-        Actions.runBlocking(new SleepAction(0.5));
-        intake.stop();
-
-        Actions.runBlocking(backToShootFromSpike3);
-        Actions.runBlocking(shootAction);
+        // Actions.runBlocking(goToSpike3);
+        //shooter.intake(this, telemetry);
+        //Actions.runBlocking(backToShootFromSpike3);
+        //shooter.shootThreeBalls(0.2, 0.6, 0.99);
 
         // ===== Cycle 3: SPIKE_2 =====
-        intake.intakeIn(1.0);                   // start intake before backing in
-        Actions.runBlocking(goToSpike2);
-        Actions.runBlocking(new SleepAction(0.5));
-        intake.stop();
+        //Actions.runBlocking(goToSpike2);
+        //shooter.intake(this, telemetry);
+        //Actions.runBlocking(backToShootFromSpike2);
+        //shooter.shootThreeBalls(0.2, 0.6, 0.99);
 
-        Actions.runBlocking(backToShootFromSpike2);
-        Actions.runBlocking(shootAction);
-*/
         /// ////////////////////
         telemetry.addLine("");
         telemetry.addLine("Auto done ✅");
