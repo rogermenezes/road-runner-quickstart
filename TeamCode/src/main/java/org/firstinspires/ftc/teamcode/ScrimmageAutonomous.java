@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
@@ -73,16 +74,16 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public static final Pose2d SPIKE2_POSE =
             new Pose2d(24.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
 
-    private NewShooter shooter;   // 🔹 NEW
+    private ParallelShooter shooter;   // 🔹 NEW
 
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
-        shooter = new NewShooter(hardwareMap);
+        shooter = new ParallelShooter(hardwareMap);
 
         // Initialize drive at the known start pose (you already tuned drive params)
-        // TODO: Duplicate variable, remove this aftrer testing
+        // TODO: Duplicate variable, remove this after testing
         Pose2d START_POSE = new Pose2d(new Vector2d(0, 0), Math.toRadians(0));
 
         // trying to move slower while getting to STRIKE_POSE
@@ -112,6 +113,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
                         slowAccel
                 )
                 .build();
+
 
         Action backToShootFromSpike4 = drive.actionBuilder(SPIKE4_POSE)
                 // drive forward out of the row (back toward approach)
@@ -184,8 +186,17 @@ public class ScrimmageAutonomous extends LinearOpMode {
         sleep(1000); // give flywheels time to get up to speed (tune this)
 
         // Go to SPIKE_4 =====
-        Actions.runBlocking(goToSpike4);
-        shooter.intake(this, telemetry);
+//        Actions.runBlocking(goToSpike4);
+//        shooter.intake(this, telemetry);
+
+        //OR
+        shooter.intakeOn();
+        Actions.runBlocking(
+                new ParallelAction(
+                        goToSpike4,
+                        new ParallelIntakeAction(shooter)
+                )
+        );
 
         //Actions.runBlocking(backToShootFromSpike4);
         //shooter.shootThreeBalls(0.2, 0.6, 0.99);
