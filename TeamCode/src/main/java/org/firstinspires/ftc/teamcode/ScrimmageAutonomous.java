@@ -52,27 +52,28 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(10.0, 0.0, Math.toRadians(-175.0));
+            new Pose2d(36, 0.0, Math.toRadians(0.0));
+
 
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
     // Using Y as 12.0 otherwise there is a runtime error about maxVel being zero
     public static final Pose2d SPIKE4_APPROACH =
-            new Pose2d(72.0, 12.0, Math.toRadians(-90.0));
+            new Pose2d(72.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE4_POSE =
-            new Pose2d(72.0, 36.0, Math.toRadians(-90.0));
+            new Pose2d(72.0, 36.0, Math.toRadians(90.0));
 
     // SPIKE_3 (row 3, E/F seam)
     public static final Pose2d SPIKE3_APPROACH =
-            new Pose2d(48.0, APPROACH_Y_POSITION, Math.toRadians(-90.0));
+            new Pose2d(48.0, APPROACH_Y_POSITION, Math.toRadians(90.0));
     public static final Pose2d SPIKE3_POSE =
-            new Pose2d(48.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(-90.0));
+            new Pose2d(48.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
 
     // SPIKE_2 (row 2, E/F seam)
     public static final Pose2d SPIKE2_APPROACH =
-            new Pose2d(24.0, APPROACH_Y_POSITION, Math.toRadians(-90.0));
+            new Pose2d(124.0, APPROACH_Y_POSITION, Math.toRadians(90.0));
     public static final Pose2d SPIKE2_POSE =
-            new Pose2d(24.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(-90.0));
+            new Pose2d(124.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
 
     private ParallelShooter shooter;   // 🔹 NEW
 
@@ -87,14 +88,16 @@ public class ScrimmageAutonomous extends LinearOpMode {
         Pose2d START_POSE = new Pose2d(new Vector2d(0, 0), Math.toRadians(0));
 
         // trying to move slower while getting to STRIKE_POSE
-        TranslationalVelConstraint slowVel = new TranslationalVelConstraint(15.0);   // in/s
-        ProfileAccelConstraint slowAccel   = new ProfileAccelConstraint(-10.0, 10.0); // in/s^2
+        TranslationalVelConstraint slowVel = new TranslationalVelConstraint(7.0);   // in/s
+        ProfileAccelConstraint slowAccel   = new ProfileAccelConstraint(-5.0, 5.0); // in/s^2
 
         // 1) START -> SHOOT_POSE
         Action goToShootFirst = drive.actionBuilder(START_POSE)
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble()
+                        SHOOT_POSE.heading.toDouble(),
+                        slowVel,
+                        slowAccel
                 )
                 .build();
 
@@ -108,10 +111,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
                 // drive forward into the SPIKE row with front intake
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE4_POSE.position.x, SPIKE4_POSE.position.y),
-                        SPIKE4_POSE.heading.toDouble(),
-                        slowVel,
-                        slowAccel
-                )
+                        SPIKE4_POSE.heading.toDouble())
                 .build();
 
 
@@ -181,20 +181,23 @@ public class ScrimmageAutonomous extends LinearOpMode {
         // ---------- SEQUENCE ----------
 
         // START -> SHOOT -> shoot balls
-        Actions.runBlocking(goToShootFirst);
-        shooter.shootThreeBalls(0.2, 0.6, 0.99);
-        sleep(1000); // give flywheels time to get up to speed (tune this)
-
+        shooter.intakeOn();
+        //Actions.runBlocking(goToShootFirst);
+        //shooter.shootThreeBalls(0.2, 0.6, 1);
+        shooter.count = 0;
         // Go to SPIKE_4 =====
-//        Actions.runBlocking(goToSpike4);
-//        shooter.intake(this, telemetry);
+        //Actions.runBlocking(goToSpike4);
+        //shooter.intake(this, telemetry);
+
+        telemetry.addData("ball count", shooter.count);
+        telemetry.update();
 
         //OR
-        shooter.intakeOn();
+//        shooter.intakeOn();
         Actions.runBlocking(
                 new ParallelAction(
-                        goToSpike4,
-                        new ParallelIntakeAction(shooter)
+                        goToShootFirst,
+                        new ParallelIntakeAction(shooter, telemetry)
                 )
         );
 

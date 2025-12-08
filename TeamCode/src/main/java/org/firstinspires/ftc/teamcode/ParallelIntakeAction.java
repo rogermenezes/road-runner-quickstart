@@ -5,14 +5,23 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 
-public class ParallelIntakeAction implements Action {
-    private final ParallelShooter parallelShooter;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-    public ParallelIntakeAction(ParallelShooter shooter) { this.parallelShooter = shooter; }
+public class ParallelIntakeAction implements Action {
+    private final ParallelShooter shooter;
+    private final Telemetry telemetry;
+
+
+    public ParallelIntakeAction(ParallelShooter shooter, Telemetry telemetry) {
+        this.shooter = shooter;
+        this.telemetry = telemetry;
+        // if you want to start intake motor here:
+        //shooter.intake.setPower(1.0); // or shooter.intakeOn();
+    }
 
     @Override
     public boolean run(@NonNull TelemetryPacket packet) {
-        parallelShooter.updateIntake(null); // or pass telemetry
-        return parallelShooter.count < 3;   // keep running until full
+        shooter.updateIntakeV2(telemetry);
+        return shooter.count < 3;   // keep running until full
     }
 }

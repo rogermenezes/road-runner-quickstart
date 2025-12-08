@@ -44,10 +44,10 @@ public class ParallelShooter {
     public static double Kdm = 0.0;
     public static double Kfm = 0.00034;
 
-    public static double highPower = 0.95;
+    public static double highPower = 0.85;
     public static double midPower = 0.7;
     public static double lowPower = 0.6;
-    private double expectedPower = 0.0;
+    private double expectedPower = highPower;
 
     public static double INTEGRAL_MOTOR_MAX = 0.5;
     private double integralSumMotor = 0;
@@ -60,6 +60,21 @@ public class ParallelShooter {
     ElapsedTime timer = new ElapsedTime();
 
     Telemetry telemetry;
+
+    private String detectedColor = null;
+    private String detectedColor2 = null;
+    private String detectedColor3 = null;
+    private String detectedColor4 = null;
+
+    private Servo rgbmid;
+    private Servo rgbmid2;
+    private Servo rgbmid3;
+    private Servo rgbmid4;
+
+    double pos;
+
+    private boolean drumMoving = false;
+    private double nextDrumPosition = 0.0;
 
 
     public ParallelShooter(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -94,7 +109,14 @@ public class ParallelShooter {
         encoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         encoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        drum.setPosition(0);
+        rgbmid = hardwareMap.get(Servo.class, "rgbmid");
+        rgbmid2 = hardwareMap.get(Servo.class, "rgbmid2");
+        rgbmid3 = hardwareMap.get(Servo.class, "rgbmid3");
+        rgbmid4 = hardwareMap.get(Servo.class, "rgbmid4");
+
+
+
+        //drum.setPosition(0);
 
     }
 
@@ -105,24 +127,130 @@ public class ParallelShooter {
         if (count >= 3) return;
 
         NormalizedRGBA colors = front.getNormalizedColors();
-        float r = colors.red / colors.alpha;
-        float g = colors.green / colors.alpha;
-        float b = colors.blue / colors.alpha;
+        NormalizedRGBA colors2 = left.getNormalizedColors();
+        NormalizedRGBA colors3 = right.getNormalizedColors();
+        NormalizedRGBA colors4 = bottom.getNormalizedColors();
 
-        String detectedColor = detectGreenOrPurple(r, g, b, telemetry);
-        if (!detectedColor.equalsIgnoreCase("P") &&
-                !detectedColor.equalsIgnoreCase("G")) {
-            return; // Nothing to do this tick
+        detectedColor = detectGreenOrPurple(colors); //front
+        telemetry.addData("Detected Color front: ", detectedColor);
+        setLed(detectedColor, rgbmid);
+
+        detectedColor2 = detectGreenOrPurple(colors2); //left
+        telemetry.addData("Detected Color left: ", detectedColor);
+        setLed(detectedColor2, rgbmid2);
+
+        detectedColor3 = detectGreenOrPurple(colors3); //right
+        telemetry.addData("Detected Color right: ", detectedColor3);
+        setLed(detectedColor3, rgbmid3);
+
+        detectedColor4 = detectGreenOrPurple(colors4); //bottom
+        telemetry.addData("Detected Color Bottom: ", detectedColor4);
+
+        if ((detectedColor.equals("P") || detectedColor.equals("G"))
+                && detectedColor2.equals("U") && detectedColor3.equals("U")) {
+            position = 0.4;
+            drum.setPosition(position);
+            runTime.reset();
+            count = 1;
+            while(runTime.milliseconds() < 125) {}
         }
 
-        count++;
-        if (count == 1 || count == 2) {
-            position += 0.2;
-        } else if (count == 3) {
-            position += 0.42;
+        if ((detectedColor.equals("P") || detectedColor.equals("G"))
+                && (detectedColor2.equals("P") || detectedColor2.equals("G"))
+                && detectedColor3.equals("U")) {
+            position = 0.82;
+            drum.setPosition(position);
+            runTime.reset();
+            count = 2;
+            while(runTime.milliseconds() < 125) {}
         }
-        drum.setPosition(position);
+
+        if ((detectedColor.equals("P") || detectedColor.equals("G"))
+                && (detectedColor3.equals("P") || detectedColor3.equals("G"))
+                && detectedColor2.equals("U")) {
+            position = 0.2;
+            drum.setPosition(position);
+            runTime.reset();
+            count = 3;
+            while(runTime.milliseconds() < 125) {}
+        }
+
     }
+
+    public void updateIntakeV2(Telemetry telemetry) {
+        // 1) If we're in the middle of a drum move, just wait for 125 ms to elapse
+        if (drumMoving) {
+            if (runTime.milliseconds() >= 125) {
+                drumMoving = false;  // done waiting, allow new detection
+            }
+            return; // do nothing else this tick
+        }
+
+        // 2) If we already have 3 balls, stop
+        if (count >= 3) return;
+
+        // 3) Read sensors
+        NormalizedRGBA colors  = front.getNormalizedColors();
+        NormalizedRGBA colors2 = left.getNormalizedColors();
+        NormalizedRGBA colors3 = right.getNormalizedColors();
+        NormalizedRGBA colors4 = bottom.getNormalizedColors();
+
+        detectedColor  = detectGreenOrPurple(colors);   // front
+        detectedColor2 = detectGreenOrPurple(colors2);  // left
+        detectedColor3 = detectGreenOrPurple(colors3);  // right
+        detectedColor4 = detectGreenOrPurple(colors4);  // bottom
+
+        if (telemetry != null) {
+            telemetry.addData("Detected front",  detectedColor);
+            telemetry.addData("Detected left",   detectedColor2);
+            telemetry.addData("Detected right",  detectedColor3);
+            telemetry.addData("Detected bottom", detectedColor4);
+        }
+
+        // 4) Decide what to do, and start a *non-blocking* 125 ms move
+
+        // Case 1: only front sees a ball → 1st ball
+        if ((detectedColor.equals("P") || detectedColor.equals("G"))
+                && detectedColor2.equals("U") && detectedColor3.equals("U")) {
+
+            position = 0.4;
+            drum.setPosition(position);
+            count = 1;
+
+            drumMoving = true;
+            runTime.reset();
+            return;
+        }
+
+        // Case 2: front + left → 2nd ball
+        if ((detectedColor.equals("P") || detectedColor.equals("G"))
+                && (detectedColor2.equals("P") || detectedColor2.equals("G"))
+                && detectedColor3.equals("U")) {
+
+            position = 0.82;
+            drum.setPosition(position);
+            count = 2;
+
+            drumMoving = true;
+            runTime.reset();
+            return;
+        }
+
+        // Case 3: front + right → 3rd ball
+        if ((detectedColor.equals("P") || detectedColor.equals("G"))
+                && (detectedColor3.equals("P") || detectedColor3.equals("G"))
+                && detectedColor2.equals("U")) {
+
+            position = 0.2;
+            drum.setPosition(position);
+            count = 3;
+
+            drumMoving = true;
+            runTime.reset();
+            return;
+        }
+    }
+
 
     private void setShooterSpeed() {
         //TODO: we need some logic on when to use one of high, mid or low
@@ -132,6 +260,9 @@ public class ParallelShooter {
 
     public void shootThreeBalls(double firstPos, double secondPos, double thirdPos)  {
         timer.reset();
+        kicker.setPosition(0.01);
+
+        setShooterSpeed();
         integralSumMotor = 0.0;
         lastErrorMotor = 0.0;
 
@@ -214,7 +345,12 @@ public class ParallelShooter {
         turret2.setPower(0.0);
     }
 
-    private String detectGreenOrPurple(float r, float g, float b, Telemetry telemetry) {
+    private String detectGreenOrPurple(NormalizedRGBA colors) {
+
+        float r = colors.red / colors.alpha;
+        float g = colors.green / colors.alpha;
+        float b = colors.blue / colors.alpha;
+
         float sum = r + g + b;
 
         double nr = (double) r / sum;
@@ -240,6 +376,7 @@ public class ParallelShooter {
             return "U";
         }
     }
+
 
     private void pid_speed_motor() {
         double TARGET_VELOCITY = expectedPower*5400;
@@ -277,6 +414,22 @@ public class ParallelShooter {
         return (error * Kpm) + (derivative * Kdm) + (integralSumMotor * Kim) + (reference * Kfm);
     }
 
+
+    private void setLed(String detectedColor, Servo rgb) {
+        if (detectedColor.equalsIgnoreCase("P")) {
+            pos = 0.71;//purple
+            rgb.setPosition(pos);
+        } else if (detectedColor.equalsIgnoreCase("G")) {
+            pos = 0.5;//green
+            rgb.setPosition(pos);
+        } else if (detectedColor.equalsIgnoreCase("R")) {
+            pos = 0.2;
+            rgb.setPosition(pos);
+        }
+        else{
+            rgb.setPosition(0);
+        }
+    }
 
 }
 
