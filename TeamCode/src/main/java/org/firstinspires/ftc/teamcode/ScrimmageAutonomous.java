@@ -80,7 +80,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
-        shooter = new ParallelShooter(hardwareMap);
+        shooter = new ParallelShooter(hardwareMap, telemetry);
 
         // Initialize drive at the known start pose (you already tuned drive params)
         // TODO: Duplicate variable, remove this after testing
