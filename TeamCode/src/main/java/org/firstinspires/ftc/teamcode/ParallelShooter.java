@@ -12,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class ParallelShooter {
 
-    private Servo drum;
+    public Servo drum;
     private DcMotorEx turret1;
     private DcMotorEx turret2;
     private DcMotor encoder;
@@ -44,7 +44,7 @@ public class ParallelShooter {
     public static double Kdm = 0.0;
     public static double Kfm = 0.00034;
 
-    public static double highPower = 0.85;
+    public static double highPower = 0.88;
     public static double midPower = 0.7;
     public static double lowPower = 0.6;
     private double expectedPower = highPower;
@@ -115,8 +115,7 @@ public class ParallelShooter {
         rgbmid4 = hardwareMap.get(Servo.class, "rgbmid4");
 
 
-
-        //drum.setPosition(0);
+        drum.setPosition(0);
 
     }
 
@@ -178,6 +177,9 @@ public class ParallelShooter {
     }
 
     public void updateIntakeV2(Telemetry telemetry) {
+
+        telemetry.addData("inside update intake v2", 20);
+        telemetry.update();
         // 1) If we're in the middle of a drum move, just wait for 125 ms to elapse
         if (drumMoving) {
             if (runTime.milliseconds() >= 125) {
@@ -219,6 +221,9 @@ public class ParallelShooter {
 
             drumMoving = true;
             runTime.reset();
+            while(runTime.milliseconds() < 125) {}
+            telemetry.addData("count ball:", count);
+            telemetry.update();
             return;
         }
 
@@ -245,6 +250,9 @@ public class ParallelShooter {
             drum.setPosition(position);
             count = 3;
 
+            telemetry.addData("count ball:", count);
+            telemetry.update();
+
             drumMoving = true;
             runTime.reset();
             return;
@@ -257,6 +265,82 @@ public class ParallelShooter {
         turret1.setPower(highPower);
         turret2.setPower(-highPower);
     }
+
+
+    public void shootThreeBallsV2(double firstPos, double secondPos, double thirdPos) {
+        timer.reset();
+        integralSumMotor = 0.0;
+        lastErrorMotor = 0.0;
+
+        //Shoot first ball
+        position = firstPos;
+        drum.setPosition(position);
+        runTime.reset();
+        while(runTime.milliseconds() < 1300) {
+            telemetry.addData("Here0", 1);
+            telemetry.update();
+            pid_speed_motor();
+        }
+
+        kicker.setPosition(0.5);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 125) {}
+        kicker.setPosition(0.01);
+
+
+        //Shoot second ball
+        setShooterSpeed();
+        position = secondPos;
+        drum.setPosition(position);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 500) {
+            telemetry.addData("Here1", 1);
+            telemetry.update();
+            pid_speed_motor();
+        }
+        timer.reset();
+
+        kicker.setPosition(0.5);
+        runTime.reset();
+        while(runTime.milliseconds() < 125) {}
+        kicker.setPosition(0.01);
+
+
+        //Shoot third ball
+        setShooterSpeed();
+        position = thirdPos;
+        drum.setPosition(position);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 500) {
+            telemetry.addData("Here2", 1);
+            telemetry.update();
+            pid_speed_motor();
+        }
+        timer.reset();
+
+        kicker.setPosition(1);
+        runTime.reset();
+        while(runTime.milliseconds() < 400) {}
+        kicker.setPosition(0.01);
+
+        count = 0;
+
+        //Move back to 0
+        position = 0;
+        drum.setPosition(position);
+
+        runTime.reset();
+        while(runTime.milliseconds() < 125) {}
+
+        //Reset shooter power
+        turret1.setPower(0);
+        turret2.setPower(0);
+    }
+
+
 
     public void shootThreeBalls(double firstPos, double secondPos, double thirdPos)  {
         timer.reset();
