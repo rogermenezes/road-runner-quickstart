@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static com.sun.tools.doclint.HtmlTag.BR;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
@@ -269,6 +271,37 @@ public final class MecanumDrive {
         leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
         rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
         rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag);
+    }
+
+    public void Right(double power) {
+//        telemetry.addData("tx", txr);
+//        telemetry.addData("power", power);
+        leftFront.setPower(power);
+        rightFront.setPower(-power);
+        leftBack.setPower(power);
+        rightBack.setPower(-power);
+    }
+
+
+
+    public void Left(double power) {
+//        telemetry.addData("tx", txr);
+//        telemetry.addData("power", power);
+//        FL.setPower(-power);
+//        FR.setPower(power);
+//        BL.setPower(-power);
+//        BR.setPower(power);
+        leftFront.setPower(-power);
+        rightFront.setPower(power);
+        leftBack.setPower(-power);
+        rightBack.setPower(power);
+    }
+
+    public void afterEnd() {
+        leftFront.setPower(0);
+        rightFront.setPower(0);
+        leftBack.setPower(0);
+        rightBack.setPower(0);
     }
 
     public final class FollowTrajectoryAction implements Action {
