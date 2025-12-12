@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  *
  */
-@Autonomous(name = "Auto: Scrimmage 11/30 (Blue C1 Start)", group = "A")
+@Autonomous(name = "Auto: Scrimmage 12/13 (Blue C1 Start)", group = "A")
 public class ScrimmageAutonomous extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
@@ -50,9 +50,15 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     public static final double FINAL_SPIKE_Y_POSITION = 48.0;
 
+    public static final Pose2d START_2 =
+            new Pose2d(3, 0.0, Math.toRadians(0.0));
+
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(-170.0));
+            new Pose2d(5, 0.0, Math.toRadians(-157.0));
+
+    public static final Pose2d SHOOT_POSE_2 =
+            new Pose2d(5, 5, Math.toRadians(-157.0));
 
 
     // SPIKE_4 (row 4, E/F seam)
@@ -71,9 +77,9 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     // SPIKE_2 (row 2, E/F seam)
     public static final Pose2d SPIKE2_APPROACH =
-            new Pose2d(124.0, APPROACH_Y_POSITION, Math.toRadians(90.0));
+            new Pose2d(24.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE2_POSE =
-            new Pose2d(124.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
+            new Pose2d(24.0, 42.0, Math.toRadians(90.0));
 
     private ParallelShooter shooter;   // 🔹 NEW
 
@@ -81,7 +87,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
-        shooter = new ParallelShooter(hardwareMap, telemetry);
+        shooter = new ParallelShooter(hardwareMap, telemetry, drive);
 
         // Initialize drive at the known start pose (you already tuned drive params)
         // TODO: Duplicate variable, remove this after testing
@@ -93,6 +99,10 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         // 1) START -> SHOOT_POSE
         Action goToShootFirst = drive.actionBuilder(START_POSE)
+                .strafeToLinearHeading(
+                        new Vector2d(START_2.position.x, START_2.position.y),
+                        START_2.heading.toDouble()
+                )
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
                         SHOOT_POSE.heading.toDouble()
@@ -118,14 +128,14 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         Action backToShootFromSpike4 = drive.actionBuilder(SPIKE4_POSE)
                 // drive forward out of the row (back toward approach)
-                .strafeToLinearHeading(
-                        new Vector2d(SPIKE4_APPROACH.position.x, SPIKE4_APPROACH.position.y),
-                        SPIKE4_APPROACH.heading.toDouble()
-                )
+//                .strafeToLinearHeading(
+//                        new Vector2d(SPIKE4_APPROACH.position.x, SPIKE4_APPROACH.position.y),
+//                        SPIKE4_APPROACH.heading.toDouble()
+//                )
                 // return to C4 shooting pose (shooter/back toward goal)
                 .strafeToLinearHeading(
-                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble()
+                        new Vector2d(SHOOT_POSE_2.position.x, SHOOT_POSE_2.position.y),
+                        SHOOT_POSE_2.heading.toDouble()
                 )
                 .build();
 
@@ -160,18 +170,20 @@ public class ScrimmageAutonomous extends LinearOpMode {
                 )
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE2_POSE.position.x, SPIKE2_POSE.position.y),
-                        SPIKE2_POSE.heading.toDouble()
+                        SPIKE2_POSE.heading.toDouble(),
+                        slowVel,
+                        slowAccel
                 )
                 .build();
 
         Action backToShootFromSpike2 = drive.actionBuilder(SPIKE2_POSE)
+//                .strafeToLinearHeading(
+//                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
+//                        SPIKE2_APPROACH.heading.toDouble()
+//                )
                 .strafeToLinearHeading(
-                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
-                        SPIKE2_APPROACH.heading.toDouble()
-                )
-                .strafeToLinearHeading(
-                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble()
+                        new Vector2d(SHOOT_POSE_2.position.x, SHOOT_POSE_2.position.y),
+                        SHOOT_POSE_2.heading.toDouble()
                 )
                 .build();
 
@@ -184,6 +196,8 @@ public class ScrimmageAutonomous extends LinearOpMode {
         // START -> SHOOT -> shoot balls
         shooter.intakeOn();
         Actions.runBlocking(goToShootFirst);
+        shooter.autoalign();
+
         shooter.shootThreeBallsV2(0.2, 0.6, 1);
         shooter.count = 0;
         // Go to SPIKE_4 =====
@@ -199,12 +213,13 @@ public class ScrimmageAutonomous extends LinearOpMode {
         shooter.drum.setPosition(0.0);
         Actions.runBlocking(
                 new ParallelAction(
-                        goToSpike4,
+                        goToSpike2,
                         new ParallelIntakeAction(shooter, telemetry)
                 )
         );
 
-        Actions.runBlocking(backToShootFromSpike4);
+        Actions.runBlocking(backToShootFromSpike2);
+        shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
         // ===== Cycle 2: SPIKE_3 =====
