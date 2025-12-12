@@ -52,7 +52,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(36, 0.0, Math.toRadians(0.0));
+            new Pose2d(5, 0.0, Math.toRadians(-170.0));
 
 
     // SPIKE_4 (row 4, E/F seam)
@@ -61,7 +61,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public static final Pose2d SPIKE4_APPROACH =
             new Pose2d(72.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE4_POSE =
-            new Pose2d(72.0, 36.0, Math.toRadians(90.0));
+            new Pose2d(72.0, 42.0, Math.toRadians(90.0));
 
     // SPIKE_3 (row 3, E/F seam)
     public static final Pose2d SPIKE3_APPROACH =
@@ -95,9 +95,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
         Action goToShootFirst = drive.actionBuilder(START_POSE)
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble(),
-                        slowVel,
-                        slowAccel
+                        SHOOT_POSE.heading.toDouble()
                 )
                 .build();
 
@@ -111,7 +109,10 @@ public class ScrimmageAutonomous extends LinearOpMode {
                 // drive forward into the SPIKE row with front intake
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE4_POSE.position.x, SPIKE4_POSE.position.y),
-                        SPIKE4_POSE.heading.toDouble())
+                        SPIKE4_POSE.heading.toDouble(),
+                        slowVel,
+                        slowAccel
+                )
                 .build();
 
 
@@ -182,8 +183,8 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         // START -> SHOOT -> shoot balls
         shooter.intakeOn();
-        //Actions.runBlocking(goToShootFirst);
-        //shooter.shootThreeBalls(0.2, 0.6, 1);
+        Actions.runBlocking(goToShootFirst);
+        shooter.shootThreeBallsV2(0.2, 0.6, 1);
         shooter.count = 0;
         // Go to SPIKE_4 =====
         //Actions.runBlocking(goToSpike4);
@@ -194,15 +195,17 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         //OR
 //        shooter.intakeOn();
+
+        shooter.drum.setPosition(0.0);
         Actions.runBlocking(
                 new ParallelAction(
-                        goToShootFirst,
+                        goToSpike4,
                         new ParallelIntakeAction(shooter, telemetry)
                 )
         );
 
-        //Actions.runBlocking(backToShootFromSpike4);
-        //shooter.shootThreeBalls(0.2, 0.6, 0.99);
+        Actions.runBlocking(backToShootFromSpike4);
+        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
         // ===== Cycle 2: SPIKE_3 =====
         // Actions.runBlocking(goToSpike3);
