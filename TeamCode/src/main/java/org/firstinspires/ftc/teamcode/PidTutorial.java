@@ -41,10 +41,15 @@ public class PidTutorial extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        turret1 = hardwareMap.get(DcMotorEx.class, "left_front_drive");
-        turret2 = hardwareMap.get(DcMotorEx.class, "right_front_drive");
+//        turret1 = hardwareMap.get(DcMotorEx.class, "left_front_drive");
+//        turret2 = hardwareMap.get(DcMotorEx.class, "right_front_drive");
+//        turret1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        turret1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turret1 = hardwareMap.get(DcMotorEx.class, "turret1");
+        turret1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turret2 = hardwareMap.get(DcMotorEx.class, "turret2");
+        turret2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         dashboard = FtcDashboard.getInstance();
 
@@ -54,6 +59,10 @@ public class PidTutorial extends LinearOpMode {
         waitForStart();
         timer.reset();
 
+        double highPower = 0.9;
+//        turret1.setPower(highPower);
+//        turret2.setPower(-highPower);
+
         while (opModeIsActive()) {
             double dt = timer.seconds();
             if (dt >= LOOP_PERIOD) {
@@ -61,16 +70,18 @@ public class PidTutorial extends LinearOpMode {
 
                 double power = PIDControl(TARGET_VELOCITY, currentVelocity);
                 turret1.setPower(power);
+                turret2.setPower(-power);
 
                 telemetry.addData("Error", TARGET_VELOCITY - currentVelocity);
+                telemetry.addData("powerT", power);
                 telemetry.update();
 
                 TelemetryPacket packet = new TelemetryPacket();
                 packet.put("velocity", currentVelocity);
                 packet.put("target", TARGET_VELOCITY);
                 packet.put("power", power);
+                packet.put("initial power", highPower);
                 dashboard.sendTelemetryPacket(packet);
-
                 timer.reset();
             }
 
@@ -93,6 +104,13 @@ public class PidTutorial extends LinearOpMode {
         lastError = error;
 
         timer.reset();
+
+        TelemetryPacket packet = new TelemetryPacket();
+        packet.put("integralSum", integralSum);
+        packet.put("target", TARGET_VELOCITY);
+        packet.put("error ()", error);
+        packet.put("reference", reference);
+        dashboard.sendTelemetryPacket(packet);
 
         // PIDF output
         return (error * Kp) + (derivative * Kd) + (integralSum * Ki) + (reference * Kf);

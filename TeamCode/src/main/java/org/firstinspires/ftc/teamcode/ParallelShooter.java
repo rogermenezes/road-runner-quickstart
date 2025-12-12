@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -9,6 +12,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+
+import java.util.List;
 
 public class ParallelShooter {
 
@@ -44,7 +51,7 @@ public class ParallelShooter {
     public static double Kdm = 0.0;
     public static double Kfm = 0.00034;
 
-    public static double highPower = 0.88;
+    public static double highPower = 0.19;
     public static double midPower = 0.7;
     public static double lowPower = 0.6;
     private double expectedPower = highPower;
@@ -76,11 +83,27 @@ public class ParallelShooter {
     private boolean drumMoving = false;
     private double nextDrumPosition = 0.0;
 
+    //auto-align code
+    boolean cr = false;
+    boolean cb = false;
 
-    public ParallelShooter(HardwareMap hardwareMap, Telemetry telemetry) {
+    private Limelight3A limelight;
+
+    boolean headlighton = false;
+    double txr = 0;
+    int time = 100;
+
+
+    MecanumDrive drive;
+
+    double error = 1.0;
+
+
+    public ParallelShooter(HardwareMap hardwareMap, Telemetry telemetry, MecanumDrive drive) {
         drum = hardwareMap.get(Servo.class, "drum");
         this.telemetry = telemetry;
         //drum.setPosition(0);
+        this.drive = drive;
 
         telemetry.addData("Status", "Initialized");
 
@@ -113,6 +136,10 @@ public class ParallelShooter {
         rgbmid2 = hardwareMap.get(Servo.class, "rgbmid2");
         rgbmid3 = hardwareMap.get(Servo.class, "rgbmid3");
         rgbmid4 = hardwareMap.get(Servo.class, "rgbmid4");
+
+        limelight = hardwareMap.get(Limelight3A.class, "Limelight30735");
+        limelight.pipelineSwitch(0);
+        limelight.start();
 
 
         drum.setPosition(0);
@@ -260,10 +287,11 @@ public class ParallelShooter {
     }
 
 
-    private void setShooterSpeed() {
+    private void setShooterSpeed(double power) {
         //TODO: we need some logic on when to use one of high, mid or low
-        turret1.setPower(highPower);
-        turret2.setPower(-highPower);
+        telemetry.addData("expectedPower", expectedPower);
+        turret1.setPower(power);
+        turret2.setPower(-power);
     }
 
 
@@ -273,10 +301,11 @@ public class ParallelShooter {
         lastErrorMotor = 0.0;
 
         //Shoot first ball
+        setShooterSpeed(0.95);
         position = firstPos;
         drum.setPosition(position);
         runTime.reset();
-        while(runTime.milliseconds() < 1300) {
+        while(runTime.milliseconds() < 1500) {
             telemetry.addData("Here0", 1);
             telemetry.update();
             pid_speed_motor();
@@ -290,12 +319,12 @@ public class ParallelShooter {
 
 
         //Shoot second ball
-        setShooterSpeed();
+        // setShooterSpeed(0.7);
         position = secondPos;
         drum.setPosition(position);
 
         runTime.reset();
-        while(runTime.milliseconds() < 500) {
+        while(runTime.milliseconds() < 800) {
             telemetry.addData("Here1", 1);
             telemetry.update();
             pid_speed_motor();
@@ -309,21 +338,21 @@ public class ParallelShooter {
 
 
         //Shoot third ball
-        setShooterSpeed();
+        // setShooterSpeed(0.7);
         position = thirdPos;
         drum.setPosition(position);
 
         runTime.reset();
-        while(runTime.milliseconds() < 500) {
+        while(runTime.milliseconds() < 800) {
             telemetry.addData("Here2", 1);
             telemetry.update();
             pid_speed_motor();
         }
         timer.reset();
 
-        kicker.setPosition(1);
+        kicker.setPosition(0.5);
         runTime.reset();
-        while(runTime.milliseconds() < 400) {}
+        while(runTime.milliseconds() < 125) {}
         kicker.setPosition(0.01);
 
         count = 0;
@@ -346,7 +375,7 @@ public class ParallelShooter {
         timer.reset();
         kicker.setPosition(0.01);
 
-        setShooterSpeed();
+        setShooterSpeed(0.9);
         integralSumMotor = 0.0;
         lastErrorMotor = 0.0;
 
@@ -368,7 +397,7 @@ public class ParallelShooter {
 
 
         //Shoot second ball
-        setShooterSpeed();
+        setShooterSpeed(0.9);
         position = secondPos;
         drum.setPosition(position);
 
@@ -387,7 +416,7 @@ public class ParallelShooter {
 
 
         //Shoot third ball
-        setShooterSpeed();
+        setShooterSpeed(0.88);
         position = thirdPos;
         drum.setPosition(position);
 
@@ -470,6 +499,10 @@ public class ParallelShooter {
             double currentVelocity2 = turret2.getVelocity();
             double power = pidControlForMotorSpeed(TARGET_VELOCITY, currentVelocity);
             double power2 = pidControlForMotorSpeed(TARGET_VELOCITY, currentVelocity2);
+            telemetry.addData("power", power);
+            telemetry.addData("power2", power2);
+            telemetry.update();
+
             turret1.setPower(power);
             turret2.setPower(-power2);
             timer.reset();
@@ -512,6 +545,140 @@ public class ParallelShooter {
         }
         else{
             rgb.setPosition(0);
+        }
+    }
+
+    public void autoalign() {
+        cr = false;
+        cb = false;
+
+
+        LLResult result = limelight.getLatestResult();
+        telemetry.addLine("hi, limelight sees");
+        telemetry.addData("lime light result", result.toString());
+        telemetry.update();
+
+
+        if (result != null){
+            headlighton = true;
+            //headlight.setPosition(1);
+            if (result.isValid()){
+                headlighton = true;
+                telemetry.addLine("hi, limelight is seeing a apriltag");
+                telemetry.update();
+                telemetry.addLine("hi, limelight is seeing a apriltag");
+                double tx = result.getTx();
+
+                List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
+
+                for (LLResultTypes.FiducialResult tag : tags) {
+                    telemetry.addLine("plz work now tag idea. string = false");
+                    telemetry.update();
+                    Pose3D pose = tag.getTargetPoseCameraSpace();
+                    Position pos = pose.getPosition();
+
+                    //perp = false;
+                    switch ((int)tag.getFiducialId()) {
+                        //make the cb = true when you wnat to c blue
+                        case 20:
+                        {telemetry.addData("Team", "Blue Side");
+                            cb = true;
+                            txr = result.getTx();
+                            break;}
+                        case 24: {
+                            telemetry.addData("Team", "Red Side");
+                            cr = true;
+                            txr = result.getTx();
+                            break;}
+                    }
+                }
+
+                if (cr == true){
+                    result = limelight.getLatestResult();
+
+                    if (result != null && result.isValid()) {
+
+                        telemetry.update();
+                        double txr = result.getTx();
+
+                        double power = 0.5;
+                        time = (int)(Math.abs(txr * 5));
+                        if (txr >  (error) ){
+                            drive.Right(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+                        } else if (txr < (-1 * error) ){
+                            drive.Left(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+                        }
+                    }
+                }
+                if (cb == true)    {
+                    telemetry.update();
+
+                    double txr = result.getTx() + 2;             ;
+
+                    if (result != null && result.isValid()) {
+
+                        double power = 0.5;
+                        time = (int)(Math.abs(txr * 5));
+                        if (txr < (-1 * error)){
+                            drive.Left(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+
+                        } else if (txr > (-1.0 * error) ){
+                            drive.Right(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void shootThreeBallsSorted() {
+        if (pattern_real != null && pattern_real.equals("PPG")) {
+            //if current pattern is PPG
+            if (pattern_current.equals(pattern_real)) {
+                shootThreeBalls(0.2, 0.6, 1);
+            }
+            else if (pattern_current.equals("PGP")) {
+                shootThreeBalls(0.2, 1, 0.6);
+            }
+            else if (pattern_current.equals("GPP")) {
+                shootThreeBalls(0.6, 1, 0.2);
+            }
+        }
+        if (pattern_real != null && pattern_real.equals("PGP")) {
+            //if current pattern is PGP
+            if (pattern_current.equals(pattern_real)) {
+                shootThreeBalls(0.2, 0.6, 1);
+            }
+            else if (pattern_current.equals("PPG")) {
+                shootThreeBalls(0.2, 1, 0.6);
+            }
+            else if (pattern_current.equals("GPP")) {
+                shootThreeBalls(0.6, 1, 0.2);
+            }
+        }
+        if (pattern_real != null && pattern_real.equals("GPP")) {
+            //if current pattern is GPP
+            if (pattern_current.equals(pattern_real)) {
+                shootThreeBalls(0.2, 0.6, 1);
+            }
+            else if (pattern_current.equals("PGP")) {
+                shootThreeBalls(0.6, 0.2, 1);
+            }
+            else if (pattern_current.equals("PPG")) {
+                shootThreeBalls(0.6, 1, 0.2);
+            }
         }
     }
 
