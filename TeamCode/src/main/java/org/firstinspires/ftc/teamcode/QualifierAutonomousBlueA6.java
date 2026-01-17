@@ -36,8 +36,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  *
  */
-@Autonomous(name = "Auto: Scrimmage 12/13 (Blue C1 Start)", group = "A")
-public class ScrimmageAutonomous extends LinearOpMode {
+@Autonomous(name = "Auto: Qualifier 12/13 (Blue A6 Start)", group = "A")
+public class QualifierAutonomousBlueA6 extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
     // Example: Facing down-field from the left tile on BLUE alliance
@@ -46,40 +46,40 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public static final Pose2d START_POSE =
             new Pose2d(0.0, 0.0, 0.0);
 
-    public static final double APPROACH_Y_POSITION = 0.0;
+    public static final double APPROACH_Y_POSITION = -12.0;
 
-    public static final double FINAL_SPIKE_Y_POSITION = 48.0;
+    public static final double FINAL_SPIKE_Y_POSITION = -42.0;
 
     public static final Pose2d START_2 =
             new Pose2d(3, 0.0, Math.toRadians(0.0));
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(-160.0));
+            new Pose2d(66.0, 0.0, Math.toRadians(0.0));
 
-    public static final Pose2d SHOOT_POSE_2 =
-            new Pose2d(5, 5, Math.toRadians(-160.0));
+    public static final Pose2d SHOOT_POSE_2 = SHOOT_POSE;
+            // new Pose2d(5, 5, Math.toRadians(157.0));
 
 
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
     // Using Y as 12.0 otherwise there is a runtime error about maxVel being zero
     public static final Pose2d SPIKE4_APPROACH =
-            new Pose2d(72.0, 12.0, Math.toRadians(90.0));
+            new Pose2d(66.0, 2.0, Math.toRadians(-135.0));
     public static final Pose2d SPIKE4_POSE =
-            new Pose2d(72.0, 42.0, Math.toRadians(90.0));
+            new Pose2d(66.0, 42.0, Math.toRadians(-135.0));
 
     // SPIKE_3 (row 3, E/F seam)
     public static final Pose2d SPIKE3_APPROACH =
-            new Pose2d(48.0, APPROACH_Y_POSITION, Math.toRadians(90.0));
+            new Pose2d(90.0, 2.0, Math.toRadians(-90.0));
     public static final Pose2d SPIKE3_POSE =
-            new Pose2d(48.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
+            new Pose2d(90.0, 42.0, Math.toRadians(-90.0));
 
     // SPIKE_2 (row 2, E/F seam)
     public static final Pose2d SPIKE2_APPROACH =
-            new Pose2d(24.0, 12.0, Math.toRadians(90.0));
+            new Pose2d(114.0, 2.0, Math.toRadians(-90.0));
     public static final Pose2d SPIKE2_POSE =
-            new Pose2d(24.0, 42.0, Math.toRadians(90.0));
+            new Pose2d(114.0, 42.0, Math.toRadians(-90.0));
 
     private ParallelShooter shooter;   // 🔹 NEW
 
@@ -99,10 +99,10 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         // 1) START -> SHOOT_POSE
         Action goToShootFirst = drive.actionBuilder(START_POSE)
-                .strafeToLinearHeading(
-                        new Vector2d(START_2.position.x, START_2.position.y),
-                        START_2.heading.toDouble()
-                )
+//                .strafeToLinearHeading(
+//                        new Vector2d(START_2.position.x, START_2.position.y),
+//                        START_2.heading.toDouble()
+//                )
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
                         SHOOT_POSE.heading.toDouble()
@@ -124,7 +124,6 @@ public class ScrimmageAutonomous extends LinearOpMode {
                         slowAccel
                 )
                 .build();
-
 
         Action backToShootFromSpike4 = drive.actionBuilder(SPIKE4_POSE)
                 // drive forward out of the row (back toward approach)
@@ -213,12 +212,12 @@ public class ScrimmageAutonomous extends LinearOpMode {
         shooter.drum.setPosition(0.0);
         Actions.runBlocking(
                 new ParallelAction(
-                        goToSpike2,
+                        goToSpike4,
                         new ParallelIntakeAction(shooter, telemetry)
                 )
         );
 
-        Actions.runBlocking(backToShootFromSpike2);
+        Actions.runBlocking(goToSpike4);
         shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 

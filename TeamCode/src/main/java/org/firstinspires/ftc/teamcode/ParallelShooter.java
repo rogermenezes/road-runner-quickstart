@@ -51,7 +51,7 @@ public class ParallelShooter {
     public static double Kdm = 0.0;
     public static double Kfm = 0.00034;
 
-    public static double highPower = 0.88;
+    public static double highPower = 0.19;
     public static double midPower = 0.7;
     public static double lowPower = 0.6;
     private double expectedPower = highPower;
@@ -305,7 +305,7 @@ public class ParallelShooter {
         position = firstPos;
         drum.setPosition(position);
         runTime.reset();
-        while(runTime.milliseconds() < 1300) {
+        while(runTime.milliseconds() < 1500) {
             telemetry.addData("Here0", 1);
             telemetry.update();
             //pid_speed_motor();
