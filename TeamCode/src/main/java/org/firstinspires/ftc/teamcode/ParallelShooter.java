@@ -308,7 +308,7 @@ public class ParallelShooter {
         while(runTime.milliseconds() < 1500) {
             telemetry.addData("Here0", 1);
             telemetry.update();
-            pid_speed_motor();
+            //pid_speed_motor();
         }
 
         kicker.setPosition(0.5);
@@ -319,7 +319,7 @@ public class ParallelShooter {
 
 
         //Shoot second ball
-        // setShooterSpeed(0.7);
+        setShooterSpeed(0.9);
         position = secondPos;
         drum.setPosition(position);
 
@@ -327,7 +327,7 @@ public class ParallelShooter {
         while(runTime.milliseconds() < 800) {
             telemetry.addData("Here1", 1);
             telemetry.update();
-            pid_speed_motor();
+            //pid_speed_motor();
         }
         timer.reset();
 
@@ -338,7 +338,7 @@ public class ParallelShooter {
 
 
         //Shoot third ball
-        // setShooterSpeed(0.7);
+        setShooterSpeed(0.88);
         position = thirdPos;
         drum.setPosition(position);
 
@@ -346,7 +346,7 @@ public class ParallelShooter {
         while(runTime.milliseconds() < 800) {
             telemetry.addData("Here2", 1);
             telemetry.update();
-            pid_speed_motor();
+            //pid_speed_motor();
         }
         timer.reset();
 
@@ -555,7 +555,6 @@ public class ParallelShooter {
 
         LLResult result = limelight.getLatestResult();
         telemetry.addLine("hi, limelight sees");
-        telemetry.addData("lime light result", result.toString());
         telemetry.update();
 
 

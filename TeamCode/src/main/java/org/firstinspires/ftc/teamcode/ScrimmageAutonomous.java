@@ -55,10 +55,10 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(-157.0));
+            new Pose2d(5, 0.0, Math.toRadians(-160.0));
 
     public static final Pose2d SHOOT_POSE_2 =
-            new Pose2d(5, 5, Math.toRadians(-157.0));
+            new Pose2d(5, 5, Math.toRadians(-160.0));
 
 
     // SPIKE_4 (row 4, E/F seam)
