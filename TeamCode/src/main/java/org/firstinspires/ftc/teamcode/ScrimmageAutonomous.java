@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  *
  */
-@Autonomous(name = "Auto: Scrimmage 12/13 (Blue C1 Start)", group = "A")
+@Autonomous(name = "Auto: Qualifier 12/13 (Blue C1 Start)", group = "A")
 public class ScrimmageAutonomous extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
@@ -55,10 +55,10 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(-160.0));
+            new Pose2d(5, 0.0, Math.toRadians(-152.0));
 
     public static final Pose2d SHOOT_POSE_2 =
-            new Pose2d(5, 5, Math.toRadians(-160.0));
+            new Pose2d(5, 5, Math.toRadians(-152.0));
 
 
     // SPIKE_4 (row 4, E/F seam)
@@ -140,14 +140,16 @@ public class ScrimmageAutonomous extends LinearOpMode {
                 .build();
 
         // SPIKE_3 cycle
-        Action goToSpike3 = drive.actionBuilder(SHOOT_POSE)
+        Action goToSpike3 = drive.actionBuilder(SHOOT_POSE_2)
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE3_APPROACH.position.x, SPIKE3_APPROACH.position.y),
                         SPIKE3_APPROACH.heading.toDouble()
                 )
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE3_POSE.position.x, SPIKE3_POSE.position.y),
-                        SPIKE3_POSE.heading.toDouble()
+                        SPIKE3_POSE.heading.toDouble(),
+                        slowVel,
+                        slowAccel
                 )
                 .build();
 
@@ -157,8 +159,8 @@ public class ScrimmageAutonomous extends LinearOpMode {
                         SPIKE3_APPROACH.heading.toDouble()
                 )
                 .strafeToLinearHeading(
-                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble()
+                        new Vector2d(SHOOT_POSE_2.position.x, SHOOT_POSE_2.position.y),
+                        SHOOT_POSE_2.heading.toDouble()
                 )
                 .build();
 
@@ -223,8 +225,21 @@ public class ScrimmageAutonomous extends LinearOpMode {
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
         // ===== Cycle 2: SPIKE_3 =====
-        // Actions.runBlocking(goToSpike3);
-        //shooter.intake(this, telemetry);
+        shooter.drum.setPosition(0.0);
+//        Actions.runBlocking(
+//                new ParallelAction(
+//                        goToSpike3,
+//                        new ParallelIntakeAction(shooter, telemetry)
+//                )
+//        );
+//        Actions.runBlocking(backToShootFromSpike3);
+//        shooter.autoalign();
+//        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
+//
+//        // ===== Cycle 2: SPIKE_3 =====
+//        shooter.drum.setPosition(0.0);
+//
+//        //shooter.intake(this, telemetry);
         //Actions.runBlocking(backToShootFromSpike3);
         //shooter.shootThreeBalls(0.2, 0.6, 0.99);
 

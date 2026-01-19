@@ -68,7 +68,7 @@ public final class MecanumDrive {
 
         // http://192.168.43.1:8080/tuning/dead-wheel-angular-ramp.html
         // track width: 6356.964279483621
-        public double trackWidthTicks = 6025.497802875128; //6356.964279483621;
+        public double trackWidthTicks = 6370.760525642603; //6356.964279483621;
 
         // feedforward parameters (in tick units)
         // kV: 0.00036386523112561545, kS: 0.7966911820949547

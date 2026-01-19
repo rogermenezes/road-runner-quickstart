@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
@@ -36,6 +37,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  *
  */
+@Config
 @Autonomous(name = "Auto: Qualifier 12/13 (Red D1 Start)", group = "A")
 public class QualifierAutonomousD1 extends LinearOpMode {
 
@@ -55,10 +57,10 @@ public class QualifierAutonomousD1 extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(157.0));
+            new Pose2d(5, 0.0, Math.toRadians(152.0));
 
     public static final Pose2d SHOOT_POSE_2 =
-            new Pose2d(5, 5, Math.toRadians(157.0));
+            new Pose2d(5, 5, Math.toRadians(150.0));
 
 
     // SPIKE_4 (row 4, E/F seam)
@@ -195,7 +197,7 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         // START -> SHOOT -> shoot balls
         shooter.intakeOn();
         Actions.runBlocking(goToShootFirst);
-        shooter.autoalign();
+        //shooter.autoalign();
 
         shooter.shootThreeBallsV2(0.2, 0.6, 1);
         shooter.count = 0;
@@ -218,7 +220,7 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         );
 
         Actions.runBlocking(backToShootFromSpike2);
-        shooter.autoalign();
+        //shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
         // ===== Cycle 2: SPIKE_3 =====

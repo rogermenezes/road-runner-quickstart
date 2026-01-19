@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -17,6 +19,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 
 import java.util.List;
 
+@Config
 public class ParallelShooter {
 
     public Servo drum;
@@ -51,20 +54,27 @@ public class ParallelShooter {
     public static double Kdm = 0.0;
     public static double Kfm = 0.00034;
 
-    public static double highPower = 0.19;
+    public static double Kp = 0.0008;
+    public static double Ki = 0.0;
+    public static double Kd = 0.0;
+    public static double Kf = 0.00046;
+
+
+    public static double highPower = 0.2;
     public static double midPower = 0.7;
     public static double lowPower = 0.6;
-    private double expectedPower = highPower;
 
-    public static double INTEGRAL_MOTOR_MAX = 0.5;
-    private double integralSumMotor = 0;
-    private double lastErrorMotor = 0;
-    // Target ticks/sec for your shooter motor
-    // Anti-windup clamp
+    public static double INTEGRAL_MAX = 0.5;
+
+    public static double expectedPower = 0.85;
+
+    private double integralSum = 0;
+    private double lastError = 0;
+
     public static double LOOP_PERIOD = 0.05;
-    //PID TUNING VALUES ENDS
 
     ElapsedTime timer = new ElapsedTime();
+    // Anti-windup clamp
 
     Telemetry telemetry;
 
@@ -97,6 +107,9 @@ public class ParallelShooter {
     MecanumDrive drive;
 
     double error = 1.0;
+
+    double red_offset;
+    double blue_offset;
 
 
     public ParallelShooter(HardwareMap hardwareMap, Telemetry telemetry, MecanumDrive drive) {
@@ -297,8 +310,8 @@ public class ParallelShooter {
 
     public void shootThreeBallsV2(double firstPos, double secondPos, double thirdPos) {
         timer.reset();
-        integralSumMotor = 0.0;
-        lastErrorMotor = 0.0;
+//        integralSumMotor = 0.0;
+//        lastErrorMotor = 0.0;
 
         //Shoot first ball
         setShooterSpeed(0.95);
@@ -308,7 +321,7 @@ public class ParallelShooter {
         while(runTime.milliseconds() < 1500) {
             telemetry.addData("Here0", 1);
             telemetry.update();
-            //pid_speed_motor();
+            pid_speed_motor();
         }
 
         kicker.setPosition(0.5);
@@ -319,7 +332,7 @@ public class ParallelShooter {
 
 
         //Shoot second ball
-        setShooterSpeed(0.9);
+        // setShooterSpeed(0.7);
         position = secondPos;
         drum.setPosition(position);
 
@@ -327,18 +340,18 @@ public class ParallelShooter {
         while(runTime.milliseconds() < 800) {
             telemetry.addData("Here1", 1);
             telemetry.update();
-            //pid_speed_motor();
+            pid_speed_motor();
         }
         timer.reset();
 
-        kicker.setPosition(0.5);
+        kicker.setPosition(0.6);
         runTime.reset();
         while(runTime.milliseconds() < 125) {}
         kicker.setPosition(0.01);
 
 
         //Shoot third ball
-        setShooterSpeed(0.88);
+        // setShooterSpeed(0.7);
         position = thirdPos;
         drum.setPosition(position);
 
@@ -346,13 +359,13 @@ public class ParallelShooter {
         while(runTime.milliseconds() < 800) {
             telemetry.addData("Here2", 1);
             telemetry.update();
-            //pid_speed_motor();
+            pid_speed_motor();
         }
         timer.reset();
 
-        kicker.setPosition(0.5);
+        kicker.setPosition(0.75);
         runTime.reset();
-        while(runTime.milliseconds() < 125) {}
+        while(runTime.milliseconds() < 250) {}
         kicker.setPosition(0.01);
 
         count = 0;
@@ -376,8 +389,6 @@ public class ParallelShooter {
         kicker.setPosition(0.01);
 
         setShooterSpeed(0.9);
-        integralSumMotor = 0.0;
-        lastErrorMotor = 0.0;
 
         //Shoot first ball
         position = firstPos;
@@ -491,45 +502,51 @@ public class ParallelShooter {
     }
 
 
-    private void pid_speed_motor() {
-        double TARGET_VELOCITY = expectedPower*5400;
-        double dt = timer.seconds();
-        if (dt >= LOOP_PERIOD) {
-            double currentVelocity = turret1.getVelocity();
-            double currentVelocity2 = turret2.getVelocity();
-            double power = pidControlForMotorSpeed(TARGET_VELOCITY, currentVelocity);
-            double power2 = pidControlForMotorSpeed(TARGET_VELOCITY, currentVelocity2);
-            telemetry.addData("power", power);
-            telemetry.addData("power2", power2);
-            telemetry.update();
-
-            turret1.setPower(power);
-            turret2.setPower(-power2);
-            timer.reset();
-        }
-    }
-
-    public double pidControlForMotorSpeed(double reference, double state) {
+    public double estimatePIDControl(double reference, double state) {
         double dt = timer.seconds();
         if (dt == 0) dt = 1e-3;
 
         double error = reference - state;
 
         // Integral accumulation with clamp
-
-        integralSumMotor +=error * dt;
-        if (integralSumMotor > INTEGRAL_MOTOR_MAX) integralSumMotor = INTEGRAL_MOTOR_MAX;
-        if (integralSumMotor < -INTEGRAL_MOTOR_MAX) integralSumMotor = -INTEGRAL_MOTOR_MAX;
+        integralSum += error * dt;
+        if (integralSum > INTEGRAL_MAX) integralSum = INTEGRAL_MAX;
+        if (integralSum < -INTEGRAL_MAX) integralSum = -INTEGRAL_MAX;
 
         // Derivative term
-        double derivative = (error - lastErrorMotor) / dt;
-        lastErrorMotor = error;
+        double derivative = (error - lastError) / dt;
+        lastError = error;
 
         timer.reset();
 
         // PIDF output
-        return (error * Kpm) + (derivative * Kdm) + (integralSumMotor * Kim) + (reference * Kfm);
+        return (error * Kp) + (derivative * Kd) + (integralSum * Ki) + (reference * Kf);
     }
+
+    private void pid_speed_motor() {
+        double TARGET_VELOCITY = expectedPower * 2200;
+        double dt = timer.seconds();
+        if (dt >= LOOP_PERIOD) {
+            double currentVelocity = turret1.getVelocity();
+            double currentVelocity2 = turret2.getVelocity();
+            double power = estimatePIDControl(TARGET_VELOCITY, currentVelocity);
+            //double power2 = estimatePIDControl(TARGET_VELOCITY, -currentVelocity2);
+            turret1.setPower(power);
+            turret2.setPower(-power);
+
+            TelemetryPacket packet = new TelemetryPacket();
+            telemetry.addData("velocity turret1", currentVelocity);
+            telemetry.addData("velocity turret2", currentVelocity2);
+            telemetry.addData("target", TARGET_VELOCITY);
+            telemetry.addData("power turret1", power);
+            telemetry.update();
+            //packet.put("power turret2", power2);
+            //dashboard.sendTelemetryPacket(packet);
+
+            timer.reset();
+        }
+    }
+
 
 
     private void setLed(String detectedColor, Servo rgb) {
@@ -555,6 +572,7 @@ public class ParallelShooter {
 
         LLResult result = limelight.getLatestResult();
         telemetry.addLine("hi, limelight sees");
+        telemetry.addData("lime light result", result.toString());
         telemetry.update();
 
 
@@ -642,7 +660,7 @@ public class ParallelShooter {
         }
     }
 
-    private void shootThreeBallsSorted() {
+     void shootThreeBallsSorted() {
         if (pattern_real != null && pattern_real.equals("PPG")) {
             //if current pattern is PPG
             if (pattern_current.equals(pattern_real)) {
@@ -680,6 +698,104 @@ public class ParallelShooter {
             }
         }
     }
+
+
+    void autoalignV2() {
+        cr = false;
+        cb = false;
+
+
+        LLResult result = limelight.getLatestResult();
+        telemetry.addLine("hi, limelight sees");
+        telemetry.update();
+
+
+        if (result != null){
+            headlighton = true;
+            //headlight.setPosition(1);
+            if (result.isValid()){
+                headlighton = true;
+                telemetry.addLine("hi, limelight is seeing a apriltag");
+                telemetry.update();
+                telemetry.addLine("hi, limelight is seeing a apriltag");
+                double tx = result.getTx();
+
+                List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
+
+                for (LLResultTypes.FiducialResult tag : tags) {
+                    telemetry.addLine("plz work now tag idea. string = false");
+                    telemetry.update();
+                    Pose3D pose = tag.getTargetPoseCameraSpace();
+                    Position pos = pose.getPosition();
+
+                    //perp = false;
+                    switch ((int)tag.getFiducialId()) {
+                        //make the cb = true when you wnat to c blue
+                        case 20:
+                        {telemetry.addData("Team", "Blue Side");
+                            cb = true;
+                            txr = result.getTx();
+                            break;}
+                        case 24: {
+                            telemetry.addData("Team", "Red Side");
+                            cr = true;
+                            txr = result.getTx();
+                            break;}
+                    }
+                }
+
+                if (cr == true){
+                    result = limelight.getLatestResult();
+
+                    if (result != null && result.isValid()) {
+                        red_offset = 5;
+                        telemetry.update();
+                        double txr = result.getTx() + red_offset;
+
+                        double power = 0.5;
+                        time = (int)(Math.abs(txr * 5));
+                        if (txr >  (error) ){
+                            telemetry.addData("move right", power);
+                            drive.Right(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+                        } else if (txr < (-1 * error) ){
+                            drive.Left(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+                        }
+                    }
+                }
+                if (cb == true)    {
+                    telemetry.update();
+
+
+
+                    if (result != null && result.isValid()) {
+                        blue_offset = 0;
+                        double txr = result.getTx() + blue_offset;
+                        double power = 0.5;
+                        time = (int)(Math.abs(txr * 5));
+                        if (txr < (-1 * error)){
+                            drive.Left(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+
+                        } else if (txr > (-1.0 * error) ){
+                            drive.Right(power);
+                            runTime.reset();
+                            while(runTime.milliseconds() < time) {}
+                            drive.afterEnd();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
 }
 
