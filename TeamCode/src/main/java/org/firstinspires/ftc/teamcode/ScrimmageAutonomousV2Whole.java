@@ -36,8 +36,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  *
  */
-@Autonomous(name = "Auto: Scrimmage 11/30 (Blue C1 Start)", group = "A")
-public class ScrimmageAutonomous extends LinearOpMode {
+@Autonomous(name = "Auto: Scrimmage 11/30 (Blue C1 Full Prg)", group = "A")
+public class ScrimmageAutonomousV2Whole extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
     // Example: Facing down-field from the left tile on BLUE alliance
@@ -52,8 +52,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(-170.0));
-
+            new Pose2d(72.0, 0.0, Math.toRadians(-135.0));
 
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
@@ -61,7 +60,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
     public static final Pose2d SPIKE4_APPROACH =
             new Pose2d(72.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE4_POSE =
-            new Pose2d(72.0, 42.0, Math.toRadians(90.0));
+            new Pose2d(72.0, 36.0, Math.toRadians(90.0));
 
     // SPIKE_3 (row 3, E/F seam)
     public static final Pose2d SPIKE3_APPROACH =
@@ -71,9 +70,9 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
     // SPIKE_2 (row 2, E/F seam)
     public static final Pose2d SPIKE2_APPROACH =
-            new Pose2d(124.0, APPROACH_Y_POSITION, Math.toRadians(90.0));
+            new Pose2d(24.0, APPROACH_Y_POSITION, Math.toRadians(90.0));
     public static final Pose2d SPIKE2_POSE =
-            new Pose2d(124.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
+            new Pose2d(24.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
 
     private ParallelShooter shooter;   // 🔹 NEW
 
@@ -104,15 +103,14 @@ public class ScrimmageAutonomous extends LinearOpMode {
                 // move/rotate into approach pose
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE4_APPROACH.position.x, SPIKE4_APPROACH.position.y),
-                        SPIKE4_APPROACH.heading.toDouble()
+                        SPIKE4_APPROACH.heading.toDouble(),
+                        slowVel,
+                        slowAccel
                 )
                 // drive forward into the SPIKE row with front intake
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE4_POSE.position.x, SPIKE4_POSE.position.y),
-                        SPIKE4_POSE.heading.toDouble(),
-                        slowVel,
-                        slowAccel
-                )
+                        SPIKE4_POSE.heading.toDouble())
                 .build();
 
 
@@ -184,7 +182,7 @@ public class ScrimmageAutonomous extends LinearOpMode {
         // START -> SHOOT -> shoot balls
         shooter.intakeOn();
         Actions.runBlocking(goToShootFirst);
-        shooter.shootThreeBallsV2(0.2, 0.6, 1);
+        shooter.shootThreeBalls(0.2, 0.6, 1);
         shooter.count = 0;
         // Go to SPIKE_4 =====
         //Actions.runBlocking(goToSpike4);
@@ -195,8 +193,6 @@ public class ScrimmageAutonomous extends LinearOpMode {
 
         //OR
 //        shooter.intakeOn();
-
-        shooter.drum.setPosition(0.0);
         Actions.runBlocking(
                 new ParallelAction(
                         goToSpike4,
@@ -204,8 +200,8 @@ public class ScrimmageAutonomous extends LinearOpMode {
                 )
         );
 
-        Actions.runBlocking(backToShootFromSpike4);
-        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
+        //Actions.runBlocking(backToShootFromSpike4);
+        //shooter.shootThreeBalls(0.2, 0.6, 0.99);
 
         // ===== Cycle 2: SPIKE_3 =====
         // Actions.runBlocking(goToSpike3);
