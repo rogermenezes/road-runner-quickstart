@@ -36,7 +36,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  *
  */
-@Autonomous(name = "Auto: Qualifier 12/13 (Blue C1 Start)", group = "A")
 public class ScrimmageAutonomous extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)

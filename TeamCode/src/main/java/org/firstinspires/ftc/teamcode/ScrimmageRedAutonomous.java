@@ -11,7 +11,6 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-@Autonomous(name = "Auto: Scrimmage 11/30 (Red D1)", group = "A")
 public class ScrimmageRedAutonomous extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
