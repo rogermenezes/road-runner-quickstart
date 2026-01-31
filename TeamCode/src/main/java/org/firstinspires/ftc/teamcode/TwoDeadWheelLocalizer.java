@@ -28,8 +28,9 @@ import org.firstinspires.ftc.teamcode.messages.TwoDeadWheelInputsMessage;
 @Config
 public final class TwoDeadWheelLocalizer implements Localizer {
     public static class Params {
-        public double parYTicks = 1523.9455469955058; // y position of the parallel encoder (in tick units)
-        public double perpXTicks = -3830.483091406737; // x position of the perpendicular encoder (in tick units)
+        public double parYTicks = 1532.237882974683;
+        //1523.9455469955058; // y position of the parallel encoder (in tick units)
+        public double perpXTicks = -4072.3372490421284; // x position of the perpendicular encoder (in tick units)
     }
 
     public static Params PARAMS = new Params();
@@ -58,6 +59,12 @@ public final class TwoDeadWheelLocalizer implements Localizer {
         perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "FR"))); // port 2
 
         *
+        * */
+
+        /*
+        *
+        * par = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "FL")));
+        * perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "BL")));
         * */
         par = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "BL")));
         perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "FR")));

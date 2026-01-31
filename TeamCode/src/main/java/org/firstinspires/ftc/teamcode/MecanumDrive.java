@@ -64,16 +64,16 @@ public final class MecanumDrive {
 
         // drive model parameters
         public double inPerTick = 0.00199236261;
-        public double lateralInPerTick = 0.0014008398409487986;
+        public double lateralInPerTick = 0.0016048338240558509;//0.0014008398409487986;
 
         // http://192.168.43.1:8080/tuning/dead-wheel-angular-ramp.html
         // track width: 6356.964279483621
-        public double trackWidthTicks = 6025.497802875128; //6356.964279483621;
+        public double trackWidthTicks = 6794.557480648865;//6370.760525642603; //6356.964279483621;
 
         // feedforward parameters (in tick units)
         // kV: 0.00036386523112561545, kS: 0.7966911820949547
-        public double kS = 0.7754130670845116; //0.9820339370013396
-        public double kV = 0.0003877944612327854; //0.0003675059774074207
+        public double kS =  0.8526525573857122;//0.7754130670845116; //0.9820339370013396
+        public double kV =  0.0003603965584930129;//0.000 3877944612327854; //0.0003675059774074207
         public double kA = 0.0001;
 
         // path profile parameters (in inches)
@@ -86,7 +86,7 @@ public final class MecanumDrive {
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 0.0;
+        public double axialGain = 1.0; // positional gain
         public double lateralGain = 1.0;
         public double headingGain = 2.0; // shared with turn
 

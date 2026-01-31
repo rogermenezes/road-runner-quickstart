@@ -38,8 +38,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  */
 @Config
-@Autonomous(name = "Auto: Qualifier 2 2/1/2026 (Red D1 Start)", group = "A")
-public class QualifierAutonomousD1 extends LinearOpMode {
+@Autonomous(name = "Auto: Improved Version 2/1/2026 (Blue C1 Start)", group = "A")
+public class QualifierAutonomousC1NewAndImproved extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
     // Example: Facing down-field from the left tile on BLUE alliance
@@ -48,45 +48,45 @@ public class QualifierAutonomousD1 extends LinearOpMode {
     public static final Pose2d START_POSE =
             new Pose2d(0.0, 0.0, 0.0);
 
-    public static final double APPROACH_Y_POSITION = -12.0;
+    public static final double APPROACH_Y_POSITION = 12.0;
 
-    public static final double FINAL_SPIKE_Y_POSITION = -42.0;
+    public static final double FINAL_SPIKE_Y_POSITION = 42.0;
 
     public static final Pose2d START_2 =
             new Pose2d(3, 0.0, Math.toRadians(0.0));
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(152.0));
+            new Pose2d(5, 0.0, Math.toRadians(30));
 
     public static final Pose2d SHOOT_POSE_2 =
-            new Pose2d(5, 5, Math.toRadians(150.0));
+            new Pose2d(5, 5, Math.toRadians(30));
 
 
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
     // Using Y as 12.0 otherwise there is a runtime error about maxVel being zero
     public static final Pose2d SPIKE4_APPROACH =
-            new Pose2d(72.0, -12.0, Math.toRadians(-90.0));
+            new Pose2d(72.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE4_POSE =
-            new Pose2d(72.0, -42.0, Math.toRadians(-90.0));
+            new Pose2d(72.0, 42.0, Math.toRadians(90.0));
 
     // SPIKE_3 (row 3, E/F seam)
     public static final Pose2d SPIKE3_APPROACH =
-            new Pose2d(48.0, APPROACH_Y_POSITION, Math.toRadians(-90.0));
+            new Pose2d(48.0, APPROACH_Y_POSITION, Math.toRadians(90.0));
     public static final Pose2d SPIKE3_POSE =
-            new Pose2d(48.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(-90.0));
+            new Pose2d(48.0, FINAL_SPIKE_Y_POSITION, Math.toRadians(90.0));
 
     // SPIKE_2 (row 2, E/F seam)
-    public static final Pose2d SPIKE2_APPROACH =
-            new Pose2d(24.0, -12.0, Math.toRadians(-90.0));
+    public static final Pose2d SPIKE2_APPROACH = // just changed to positive
+            new Pose2d(24.0, 12.0, Math.toRadians(90.0));
     public static final Pose2d SPIKE2_POSE =
-            new Pose2d(24.0, -42.0, Math.toRadians(-90.0));
+            new Pose2d(24.0, 42.0, Math.toRadians(90.0));
 
     public static final Pose2d CORNER_APPROACH =
-            new Pose2d(2.0, -12.0, Math.toRadians(-90.0));
+            new Pose2d(2.0, 12.0, Math.toRadians(90.0)); // turned negative to face blue goal
     public static final Pose2d CORNER_POSE =
-            new Pose2d(2.0, -42.0, Math.toRadians(-90.0));
+            new Pose2d(2.0, 42.0, Math.toRadians(90.0));
 
     private ParallelShooter shooter;   // 🔹 NEW
 

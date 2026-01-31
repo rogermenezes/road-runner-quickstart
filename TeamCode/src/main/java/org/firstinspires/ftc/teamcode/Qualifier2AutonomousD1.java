@@ -13,6 +13,9 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * The high level logic is this:
  * 1. Robot starts at START_POSE
@@ -38,8 +41,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  *
  */
 @Config
-@Autonomous(name = "Auto: Qualifier 2 2/1/2026 (Red D1 Start)", group = "A")
-public class QualifierAutonomousD1 extends LinearOpMode {
+@Autonomous(name = "(Not needed): Qualifier (Draft) 2/1 (Red D1 Start)", group = "A")
+public class Qualifier2AutonomousD1 extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
     // Example: Facing down-field from the left tile on BLUE alliance
@@ -57,7 +60,7 @@ public class QualifierAutonomousD1 extends LinearOpMode {
 
     // Shooting at C4, shooter is at the BACK, facing Blue goal
     public static final Pose2d SHOOT_POSE =
-            new Pose2d(5, 0.0, Math.toRadians(152.0));
+            new Pose2d(72, 0.0, Math.toRadians(-45));
 
     public static final Pose2d SHOOT_POSE_2 =
             new Pose2d(5, 5, Math.toRadians(150.0));
@@ -67,9 +70,18 @@ public class QualifierAutonomousD1 extends LinearOpMode {
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
     // Using Y as 12.0 otherwise there is a runtime error about maxVel being zero
     public static final Pose2d SPIKE4_APPROACH =
-            new Pose2d(72.0, -12.0, Math.toRadians(-90.0));
+            new Pose2d(74.0, -12.0, Math.toRadians(-90.0));
     public static final Pose2d SPIKE4_POSE =
-            new Pose2d(72.0, -42.0, Math.toRadians(-90.0));
+            new Pose2d(74.0, -42.0, Math.toRadians(-90.0));
+
+
+    public static final Pose2d CLASSIFIER_APPROACH =
+            new Pose2d(62.0, -12.0, Math.toRadians(-90.0));
+    public static final Pose2d CLASSIFIER_POSE =
+            new Pose2d(62.0, -54.0, Math.toRadians(-90.0));
+
+    public static final Pose2d TARGET_POSE = new Pose2d(31.1, -40.9, Math.toRadians(-45));
+
 
     // SPIKE_3 (row 3, E/F seam)
     public static final Pose2d SPIKE3_APPROACH =
@@ -83,15 +95,11 @@ public class QualifierAutonomousD1 extends LinearOpMode {
     public static final Pose2d SPIKE2_POSE =
             new Pose2d(24.0, -42.0, Math.toRadians(-90.0));
 
-    public static final Pose2d CORNER_APPROACH =
-            new Pose2d(2.0, -12.0, Math.toRadians(-90.0));
-    public static final Pose2d CORNER_POSE =
-            new Pose2d(2.0, -42.0, Math.toRadians(-90.0));
-
     private ParallelShooter shooter;   // 🔹 NEW
 
     @Override
     public void runOpMode() throws InterruptedException {
+        try {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
         shooter = new ParallelShooter(hardwareMap, telemetry, drive);
@@ -106,10 +114,6 @@ public class QualifierAutonomousD1 extends LinearOpMode {
 
         // 1) START -> SHOOT_POSE
         Action goToShootFirst = drive.actionBuilder(START_POSE)
-                .strafeToLinearHeading(
-                        new Vector2d(START_2.position.x, START_2.position.y),
-                        START_2.heading.toDouble()
-                )
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
                         SHOOT_POSE.heading.toDouble()
@@ -140,12 +144,37 @@ public class QualifierAutonomousD1 extends LinearOpMode {
 //                )
                 // return to C4 shooting pose (shooter/back toward goal)
                 .strafeToLinearHeading(
-                        new Vector2d(SHOOT_POSE_2.position.x, SHOOT_POSE_2.position.y),
-                        SHOOT_POSE_2.heading.toDouble()
+                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
+                        SHOOT_POSE.heading.toDouble()
                 )
                 .build();
 
-        // SPIKE_3 cycle
+        //Go to classifier
+            Action goToClassifier = drive.actionBuilder(SHOOT_POSE)
+                    .strafeToLinearHeading(
+                            new Vector2d(CLASSIFIER_APPROACH.position.x, CLASSIFIER_APPROACH.position.y),
+                            CLASSIFIER_APPROACH.heading.toDouble()
+                    )
+                    .strafeToLinearHeading(
+                            new Vector2d(CLASSIFIER_POSE.position.x, CLASSIFIER_POSE.position.y),
+                            CLASSIFIER_POSE.heading.toDouble()
+                    )
+                    .build();
+
+            Action lateralMove = drive.actionBuilder(SHOOT_POSE)
+                    .strafeToLinearHeading(
+                            new Vector2d(TARGET_POSE.position.x, TARGET_POSE.position.y),
+                            TARGET_POSE.heading.toDouble()
+                    )
+                    .build();
+
+
+
+            telemetry.addData("actual end pose", drive.localizer.getPose());
+            telemetry.update();
+
+
+            // SPIKE_3 cycle
         Action goToSpike3 = drive.actionBuilder(SHOOT_POSE)
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE3_APPROACH.position.x, SPIKE3_APPROACH.position.y),
@@ -193,28 +222,6 @@ public class QualifierAutonomousD1 extends LinearOpMode {
                 )
                 .build();
 
-        Action goToCorner = drive.actionBuilder(SHOOT_POSE)
-                .strafeToLinearHeading(
-                        new Vector2d(CORNER_APPROACH.position.x, CORNER_APPROACH.position.y),
-                        CORNER_APPROACH.heading.toDouble()
-                )
-                .strafeToLinearHeading(
-                        new Vector2d(CORNER_POSE.position.x, CORNER_POSE.position.y),
-                        CORNER_POSE.heading.toDouble()
-                )
-                .build();
-
-        Action backToShootFromCorner = drive.actionBuilder(CORNER_POSE)
-                .strafeToLinearHeading(
-                        new Vector2d(CORNER_APPROACH.position.x, CORNER_APPROACH.position.y),
-                        CORNER_APPROACH.heading.toDouble()
-                )
-                .strafeToLinearHeading(
-                        new Vector2d(SHOOT_POSE.position.x, SHOOT_POSE.position.y),
-                        SHOOT_POSE.heading.toDouble()
-                )
-                .build();
-
 
         waitForStart();
         if (isStopRequested()) return;
@@ -226,7 +233,7 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         Actions.runBlocking(goToShootFirst);
         //shooter.autoalign();
 
-        shooter.shootThreeBallsV2(0.2, 0.6, 1);
+//        shooter.shootThreeBallsV2(0.2, 0.6, 1);
         shooter.count = 0;
         // Go to SPIKE_4 =====
         //Actions.runBlocking(goToSpike4);
@@ -237,41 +244,21 @@ public class QualifierAutonomousD1 extends LinearOpMode {
 
         //OR
 //        shooter.intakeOn();
+        //Actions.runBlocking(goToSpike4);
+        //Actions.runBlocking(backToShootFromSpike4);
+        Actions.runBlocking(lateralMove);
 
-        shooter.drum.setPosition(0.0);
-        Actions.runBlocking(
-                new ParallelAction(
-                        goToCorner,
-                        new ParallelIntakeAction(shooter, telemetry)
-                )
-        );
-
-        Actions.runBlocking(backToShootFromCorner);
-        //shooter.autoalign();
-        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
-
-        Actions.runBlocking(
-                new ParallelAction(
-                        goToSpike3,
-                        new ParallelIntakeAction(shooter, telemetry)
-                )
-        );
-
-        Actions.runBlocking(backToShootFromSpike3);
-        //shooter.autoalign();
-        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
-
-        Actions.runBlocking(
-                new ParallelAction(
-                        goToSpike4,
-                        new ParallelIntakeAction(shooter, telemetry)
-                )
-        );
-
-        Actions.runBlocking(backToShootFromSpike4);
-        //shooter.autoalign();
-        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
-
+//        shooter.drum.setPosition(0.0);
+//        Actions.runBlocking(
+//                new ParallelAction(
+//                        goToSpike2,
+//                        new ParallelIntakeAction(shooter, telemetry)
+//                )
+//        );
+//
+//        Actions.runBlocking(backToShootFromSpike2);
+//        //shooter.autoalign();
+//        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
         // ===== Cycle 2: SPIKE_3 =====
         // Actions.runBlocking(goToSpike3);
@@ -287,7 +274,18 @@ public class QualifierAutonomousD1 extends LinearOpMode {
 
         /// ////////////////////
         telemetry.addLine("");
-        telemetry.addLine("Auto done ✅");
-        telemetry.update();
+        telemetry.addLine("Auto done ✅");        telemetry.update();
+
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+
+
+            telemetry.addLine("EXCEPTION STACK TRACE:");
+            telemetry.addLine(sw.toString());
+            telemetry.update();
+            e.printStackTrace();
+        }
     }
 }
