@@ -243,10 +243,10 @@ public class ParallelShooter {
         detectedColor4 = detectGreenOrPurple(colors4);  // bottom
 
         if (telemetry != null) {
-            telemetry.addData("Detected front",  detectedColor);
-            telemetry.addData("Detected left",   detectedColor2);
-            telemetry.addData("Detected right",  detectedColor3);
-            telemetry.addData("Detected bottom", detectedColor4);
+//            telemetry.addData("Detected front",  detectedColor);
+//            telemetry.addData("Detected left",   detectedColor2);
+//            telemetry.addData("Detected right",  detectedColor3);
+//            telemetry.addData("Detected bottom", detectedColor4);
         }
 
         // 4) Decide what to do, and start a *non-blocking* 125 ms move
@@ -338,8 +338,6 @@ public class ParallelShooter {
 
         runTime.reset();
         while(runTime.milliseconds() < 800) {
-            telemetry.addData("Here1", 1);
-            telemetry.update();
             pid_speed_motor();
         }
         timer.reset();
@@ -357,8 +355,6 @@ public class ParallelShooter {
 
         runTime.reset();
         while(runTime.milliseconds() < 800) {
-            telemetry.addData("Here2", 1);
-            telemetry.update();
             pid_speed_motor();
         }
         timer.reset();
@@ -414,8 +410,6 @@ public class ParallelShooter {
 
         runTime.reset();
         while(runTime.milliseconds() < 500) {
-            telemetry.addData("Here1", 1);
-            telemetry.update();
             pid_speed_motor();
         }
         timer.reset();
