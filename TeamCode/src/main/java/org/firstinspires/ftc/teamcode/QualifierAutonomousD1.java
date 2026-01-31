@@ -207,6 +207,9 @@ public class QualifierAutonomousD1 extends LinearOpMode {
 
         // ---------- SEQUENCE ----------
 
+        telemetry.addLine("shooting pre-loaded balls");
+        telemetry.update();
+
         // START -> SHOOT -> shoot balls
         shooter.intakeOn();
         Actions.runBlocking(goToShootFirst);
@@ -221,8 +224,26 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         telemetry.addData("ball count", shooter.count);
         telemetry.update();
 
+        telemetry.addLine("going to spike 2 to fetch balls");
+        telemetry.update();
+
+        Actions.runBlocking(
+                new ParallelAction(
+                        goToSpike2,
+                        new ParallelIntakeAction(shooter, telemetry)
+                )
+        );
+
+        Actions.runBlocking(backToShootFromSpike2);
+        //shooter.autoalign();
+        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
+
+
         //OR
 //        shooter.intakeOn();
+
+        telemetry.addLine("going to corner to fetch balls");
+        telemetry.update();
 
         shooter.drum.setPosition(0.0);
         Actions.runBlocking(
@@ -236,6 +257,9 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         //shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
+        telemetry.addLine("going to spike 3 to fetch balls");
+        telemetry.update();
+
         Actions.runBlocking(
                 new ParallelAction(
                         goToSpike3,
@@ -246,6 +270,9 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         Actions.runBlocking(backToShootFromSpike3);
         //shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
+
+        telemetry.addLine("going to spike 4 to fetch balls");
+        telemetry.update();
 
         Actions.runBlocking(
                 new ParallelAction(
