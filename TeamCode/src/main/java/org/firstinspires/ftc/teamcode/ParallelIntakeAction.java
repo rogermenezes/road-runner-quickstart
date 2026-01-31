@@ -25,8 +25,6 @@ public class ParallelIntakeAction implements Action {
     @Override
     public boolean run(@NonNull TelemetryPacket packet) {
         shooter.updateIntakeV2(telemetry);
-        telemetry.addData("shooter ball count:", shooter.count);
-        telemetry.update();
         return (timer.seconds() < 10);   // keep running until full
     }
 }

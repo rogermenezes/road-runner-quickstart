@@ -62,7 +62,6 @@ public class QualifierAutonomousD1 extends LinearOpMode {
     public static final Pose2d SHOOT_POSE_2 =
             new Pose2d(5, 5, Math.toRadians(150.0));
 
-
     // SPIKE_4 (row 4, E/F seam)
     // heading +90°: FRONT (intake) points +Y into the SPIKE row
     // Using Y as 12.0 otherwise there is a runtime error about maxVel being zero
@@ -96,10 +95,6 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, START_POSE);
         shooter = new ParallelShooter(hardwareMap, telemetry, drive);
 
-        // Initialize drive at the known start pose (you already tuned drive params)
-        // TODO: Duplicate variable, remove this after testing
-        Pose2d START_POSE = new Pose2d(new Vector2d(0, 0), Math.toRadians(0));
-
         // trying to move slower while getting to STRIKE_POSE
         TranslationalVelConstraint slowVel = new TranslationalVelConstraint(7.0);   // in/s
         ProfileAccelConstraint slowAccel   = new ProfileAccelConstraint(-5.0, 5.0); // in/s^2
@@ -132,20 +127,14 @@ public class QualifierAutonomousD1 extends LinearOpMode {
                 )
                 .build();
 
+        // return to C4 shooting pose (shooter/back toward goal)
         Action backToShootFromSpike4 = drive.actionBuilder(SPIKE4_POSE)
-                // drive forward out of the row (back toward approach)
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE4_APPROACH.position.x, SPIKE4_APPROACH.position.y),
-//                        SPIKE4_APPROACH.heading.toDouble()
-//                )
-                // return to C4 shooting pose (shooter/back toward goal)
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE_2.position.x, SHOOT_POSE_2.position.y),
                         SHOOT_POSE_2.heading.toDouble()
                 )
                 .build();
 
-        // SPIKE_3 cycle
         Action goToSpike3 = drive.actionBuilder(SHOOT_POSE)
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE3_APPROACH.position.x, SPIKE3_APPROACH.position.y),
@@ -153,7 +142,9 @@ public class QualifierAutonomousD1 extends LinearOpMode {
                 )
                 .strafeToLinearHeading(
                         new Vector2d(SPIKE3_POSE.position.x, SPIKE3_POSE.position.y),
-                        SPIKE3_POSE.heading.toDouble()
+                        SPIKE3_POSE.heading.toDouble(),
+                        slowVel,
+                        slowAccel
                 )
                 .build();
 
@@ -183,10 +174,6 @@ public class QualifierAutonomousD1 extends LinearOpMode {
                 .build();
 
         Action backToShootFromSpike2 = drive.actionBuilder(SPIKE2_POSE)
-//                .strafeToLinearHeading(
-//                        new Vector2d(SPIKE2_APPROACH.position.x, SPIKE2_APPROACH.position.y),
-//                        SPIKE2_APPROACH.heading.toDouble()
-//                )
                 .strafeToLinearHeading(
                         new Vector2d(SHOOT_POSE_2.position.x, SHOOT_POSE_2.position.y),
                         SHOOT_POSE_2.heading.toDouble()
@@ -215,11 +202,13 @@ public class QualifierAutonomousD1 extends LinearOpMode {
                 )
                 .build();
 
-
         waitForStart();
         if (isStopRequested()) return;
 
         // ---------- SEQUENCE ----------
+
+        telemetry.addLine("shooting pre-loaded balls");
+        telemetry.update();
 
         // START -> SHOOT -> shoot balls
         shooter.intakeOn();
@@ -235,8 +224,26 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         telemetry.addData("ball count", shooter.count);
         telemetry.update();
 
+        telemetry.addLine("going to spike 2 to fetch balls");
+        telemetry.update();
+
+        Actions.runBlocking(
+                new ParallelAction(
+                        goToSpike2,
+                        new ParallelIntakeAction(shooter, telemetry)
+                )
+        );
+
+        Actions.runBlocking(backToShootFromSpike2);
+        //shooter.autoalign();
+        shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
+
+
         //OR
 //        shooter.intakeOn();
+
+        telemetry.addLine("going to corner to fetch balls");
+        telemetry.update();
 
         shooter.drum.setPosition(0.0);
         Actions.runBlocking(
@@ -250,6 +257,9 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         //shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
+        telemetry.addLine("going to spike 3 to fetch balls");
+        telemetry.update();
+
         Actions.runBlocking(
                 new ParallelAction(
                         goToSpike3,
@@ -261,6 +271,9 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         //shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
 
+        telemetry.addLine("going to spike 4 to fetch balls");
+        telemetry.update();
+
         Actions.runBlocking(
                 new ParallelAction(
                         goToSpike4,
@@ -271,19 +284,6 @@ public class QualifierAutonomousD1 extends LinearOpMode {
         Actions.runBlocking(backToShootFromSpike4);
         //shooter.autoalign();
         shooter.shootThreeBallsV2(0.2, 0.6, 0.99);
-
-
-        // ===== Cycle 2: SPIKE_3 =====
-        // Actions.runBlocking(goToSpike3);
-        //shooter.intake(this, telemetry);
-        //Actions.runBlocking(backToShootFromSpike3);
-        //shooter.shootThreeBalls(0.2, 0.6, 0.99);
-
-        // ===== Cycle 3: SPIKE_2 =====
-        //Actions.runBlocking(goToSpike2);
-        //shooter.intake(this, telemetry);
-        //Actions.runBlocking(backToShootFromSpike2);
-        //shooter.shootThreeBalls(0.2, 0.6, 0.99);
 
         /// ////////////////////
         telemetry.addLine("");

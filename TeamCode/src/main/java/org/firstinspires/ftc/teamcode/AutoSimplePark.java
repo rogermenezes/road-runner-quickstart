@@ -14,7 +14,6 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 
 import com.acmerobotics.roadrunner.ftc.Actions;
 
-@Autonomous(name = "Auto: Simple Park", group = "A")
 public class AutoSimplePark extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
