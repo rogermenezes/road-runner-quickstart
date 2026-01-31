@@ -40,8 +40,6 @@ import java.io.StringWriter;
  *
  *
  */
-@Config
-@Autonomous(name = "(Not needed): Qualifier (Draft) 2/1 (Red D1 Start)", group = "A")
 public class Qualifier2AutonomousD1 extends LinearOpMode {
 
     // Set this to your actual starting pose on the field (units are inches/radians by default in quickstart)
